@@ -15,7 +15,7 @@ import {
 } from 'react-icons/fa';
 import useAuthStore from '../store/authStore';
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -206,7 +206,7 @@ const Layout = ({ children }) => {
 
         {/* Page content */}
         <main className="flex-1">
-          {children || <Outlet />}
+          <Outlet />
         </main>
       </div>
     </div>

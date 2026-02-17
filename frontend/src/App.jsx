@@ -95,16 +95,22 @@ function App() {
             <DashboardWrapper role="CA" />
           } />
           <Route path="/clients" element={<ClientList />} />
+          <Route path="/users" element={<div>Users Page</div>} />
+          <Route path="/businesses" element={<div>Businesses Page</div>} />
+          <Route path="/audit" element={<div>Audit Logs Page</div>} />
           
           {/* Accountant Routes */}
           <Route path="/accountant" element={
             <DashboardWrapper role="ACCOUNTANT" />
           } />
+          <Route path="/team" element={<div>My Team Page</div>} />
           
           {/* Client Routes */}
           <Route path="/client" element={
             <DashboardWrapper role="CLIENT" />
           } />
+          <Route path="/profile" element={<div>Profile Page</div>} />
+          <Route path="/change-password" element={<div>Change Password Page</div>} />
 
           {/* Default redirect based on role */}
           <Route 
