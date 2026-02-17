@@ -6,10 +6,67 @@ const bcrypt = require("bcryptjs");
 // @desc    Submit Interest Form (Public)
 // @route   POST /api/candidates/interest
 // @access  Public
+// exports.submitInterestForm = async (req, res) => {
+//   try {
+//     const { personalInfo, education, workExperience, interestInfo, consent } =
+//       req.body;
+
+//     if (
+//       !personalInfo ||
+//       !personalInfo.firstName ||
+//       !personalInfo.primaryContact?.number
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Please provide required personal information",
+//       });
+//     }
+
+//     // Check if candidate already exists
+//     const existingCandidate = await Candidate.findOne({
+//       "personalInfo.primaryContact.number": personalInfo.primaryContact.number,
+//     });
+
+//     if (existingCandidate) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "A candidate with this contact number already exists",
+//       });
+//     }
+
+//     const candidate = await Candidate.create({
+//       personalInfo,
+//       education,
+//       workExperience,
+//       interestInfo,
+//       consent,
+//       documents: {
+//         resume: req.body.resume,
+//       },
+//       status: "INTERESTED",
+//       profilePercentage: 20,
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Interest form submitted successfully",
+//       data: candidate,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
 exports.submitInterestForm = async (req, res) => {
   try {
+    // 🔥 FormData se string aayega
+    const formData = JSON.parse(req.body.formData);
+
     const { personalInfo, education, workExperience, interestInfo, consent } =
-      req.body;
+      formData;
 
     if (
       !personalInfo ||
@@ -22,7 +79,6 @@ exports.submitInterestForm = async (req, res) => {
       });
     }
 
-    // Check if candidate already exists
     const existingCandidate = await Candidate.findOne({
       "personalInfo.primaryContact.number": personalInfo.primaryContact.number,
     });
@@ -41,7 +97,7 @@ exports.submitInterestForm = async (req, res) => {
       interestInfo,
       consent,
       documents: {
-        resume: req.body.resume,
+        resume: req.file ? `/uploads/${req.file.filename}` : "",
       },
       status: "INTERESTED",
       profilePercentage: 20,

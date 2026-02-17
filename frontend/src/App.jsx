@@ -13,6 +13,7 @@ import CandidatesList from "./pages/admin/CandidatesList";
 import CandidateDetail from "./pages/admin/CandidateDetail";
 import EmployeeDashboard from "./pages/employee/Dashboard";
 import PrivateRoute from "./components/PrivateRoute";
+import AdminUpdatePage from "./pages/admin/AdminEmployeeProfile";
 
 function App() {
   return (
@@ -48,6 +49,15 @@ function App() {
             element={
               <PrivateRoute allowedRoles={["admin", "advisor"]}>
                 <CandidateDetail />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/admin/candidates/:id/admin-edit"
+            element={
+              <PrivateRoute allowedRoles={["admin"]}>
+                <AdminUpdatePage />
               </PrivateRoute>
             }
           />

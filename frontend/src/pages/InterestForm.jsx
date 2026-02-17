@@ -1,116 +1,132 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { FaCalculator, FaArrowLeft } from 'react-icons/fa';
-import { candidateAPI } from '../services/api';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { FaCalculator, FaArrowLeft } from "react-icons/fa";
+import { candidateAPI } from "../services/api";
 
 const InterestForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null); // 🔥 NEW
   const [formData, setFormData] = useState({
     personalInfo: {
-      firstName: '',
-      lastName: '',
-      dateOfBirth: '',
-      gender: '',
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      gender: "",
       primaryContact: {
-        countryCode: '+91',
-        number: ''
+        countryCode: "+91",
+        number: "",
       },
       currentAddress: {
-        address: '',
-        city: '',
-        state: '',
-        pin: ''
-      }
+        address: "",
+        city: "",
+        state: "",
+        pin: "",
+      },
     },
     education: {
-      highestQualification: '',
-      yearOfPassing: '',
-      certifications: []
+      highestQualification: "",
+      yearOfPassing: "",
+      certifications: [],
     },
     workExperience: {
-      jobTitle: '',
-      companyName: '',
-      yearsOfExperience: '',
-      responsibilities: ''
+      jobTitle: "",
+      companyName: "",
+      yearsOfExperience: "",
+      responsibilities: "",
     },
     interestInfo: {
-      whyJoin: '',
-      careerGoals: '',
-      availability: '',
-      sourceOfAwareness: ''
+      whyJoin: "",
+      careerGoals: "",
+      availability: "",
+      sourceOfAwareness: "",
     },
     consent: {
       accuracyDeclaration: false,
-      dataProcessingConsent: false
-    }
+      dataProcessingConsent: false,
+    },
   });
 
   const handleChange = (section, field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const handleNestedChange = (section, subsection, field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
         [subsection]: {
           ...prev[section][subsection],
-          [field]: value
-        }
-      }
+          [field]: value,
+        },
+      },
     }));
   };
 
   const handleCertificationAdd = () => {
-    const cert = prompt('Enter certification name:');
+    const cert = prompt("Enter certification name:");
     if (cert) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         education: {
           ...prev.education,
-          certifications: [...prev.education.certifications, cert]
-        }
+          certifications: [...prev.education.certifications, cert],
+        },
       }));
     }
   };
 
   const handleCertificationRemove = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       education: {
         ...prev.education,
-        certifications: prev.education.certifications.filter((_, i) => i !== index)
-      }
+        certifications: prev.education.certifications.filter(
+          (_, i) => i !== index,
+        ),
+      },
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.consent.accuracyDeclaration || !formData.consent.dataProcessingConsent) {
-      toast.error('Please accept all consent declarations');
+    if (
+      !formData.consent.accuracyDeclaration ||
+      !formData.consent.dataProcessingConsent
+    ) {
+      toast.error("Please accept all consent declarations");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await candidateAPI.submitInterestForm(formData);
-      toast.success('Interest form submitted successfully!');
+      // 🔥 NEW: Check if resume file is selected
+      if (!resumeFile) {
+        toast.error("Please upload your resume");
+        return;
+      }
+
+      const formPayload = new FormData();
+      formPayload.append("resume", resumeFile);
+      formPayload.append("formData", JSON.stringify(formData));
+
+      await candidateAPI.submitInterestForm(formPayload);
+      toast.success("Interest form submitted successfully!");
       setTimeout(() => {
-        navigate('/');
+        navigate("/");
       }, 2000);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to submit form');
+      toast.error(error.response?.data?.message || "Failed to submit form");
     } finally {
       setLoading(false);
     }
@@ -122,13 +138,18 @@ const InterestForm = () => {
       <div className="container mx-auto px-6 mb-8">
         <div className="bg-white rounded-2xl shadow-md p-6">
           <div className="flex items-center justify-between">
-            <Link to="/get-started" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition">
+            <Link
+              to="/get-started"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition"
+            >
               <FaArrowLeft />
               <span>Back</span>
             </Link>
             <div className="flex items-center space-x-2">
               <FaCalculator className="text-2xl text-primary-600" />
-              <span className="text-xl font-bold text-gray-800">Interest Form</span>
+              <span className="text-xl font-bold text-gray-800">
+                Interest Form
+              </span>
             </div>
             <div className="w-16"></div>
           </div>
@@ -139,15 +160,22 @@ const InterestForm = () => {
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Express Your Interest</h1>
-            <p className="text-gray-600">Fill out this form to stay updated on opportunities with us (~20% profile)</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Express Your Interest
+            </h1>
+            <p className="text-gray-600">
+              Fill out this form to stay updated on opportunities with us (~20%
+              profile)
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Personal Information */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">Personal Information</h2>
-              
+              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">
+                Personal Information
+              </h2>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -157,7 +185,9 @@ const InterestForm = () => {
                     type="text"
                     required
                     value={formData.personalInfo.firstName}
-                    onChange={(e) => handleChange('personalInfo', 'firstName', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("personalInfo", "firstName", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="Enter first name"
                   />
@@ -171,7 +201,9 @@ const InterestForm = () => {
                     type="text"
                     required
                     value={formData.personalInfo.lastName}
-                    onChange={(e) => handleChange('personalInfo', 'lastName', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("personalInfo", "lastName", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="Enter last name"
                   />
@@ -185,7 +217,13 @@ const InterestForm = () => {
                     type="date"
                     required
                     value={formData.personalInfo.dateOfBirth}
-                    onChange={(e) => handleChange('personalInfo', 'dateOfBirth', e.target.value)}
+                    onChange={(e) =>
+                      handleChange(
+                        "personalInfo",
+                        "dateOfBirth",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                   />
                 </div>
@@ -197,7 +235,9 @@ const InterestForm = () => {
                   <select
                     required
                     value={formData.personalInfo.gender}
-                    onChange={(e) => handleChange('personalInfo', 'gender', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("personalInfo", "gender", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                   >
                     <option value="">Select gender</option>
@@ -216,14 +256,28 @@ const InterestForm = () => {
                   <input
                     type="text"
                     value={formData.personalInfo.primaryContact.countryCode}
-                    onChange={(e) => handleNestedChange('personalInfo', 'primaryContact', 'countryCode', e.target.value)}
+                    onChange={(e) =>
+                      handleNestedChange(
+                        "personalInfo",
+                        "primaryContact",
+                        "countryCode",
+                        e.target.value,
+                      )
+                    }
                     className="w-24 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                   />
                   <input
                     type="tel"
                     required
                     value={formData.personalInfo.primaryContact.number}
-                    onChange={(e) => handleNestedChange('personalInfo', 'primaryContact', 'number', e.target.value)}
+                    onChange={(e) =>
+                      handleNestedChange(
+                        "personalInfo",
+                        "primaryContact",
+                        "number",
+                        e.target.value,
+                      )
+                    }
                     className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="Enter mobile number"
                   />
@@ -231,8 +285,10 @@ const InterestForm = () => {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800">Current Residential Address</h3>
-                
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Current Residential Address
+                </h3>
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Address <span className="text-red-500">*</span>
@@ -240,7 +296,14 @@ const InterestForm = () => {
                   <textarea
                     required
                     value={formData.personalInfo.currentAddress.address}
-                    onChange={(e) => handleNestedChange('personalInfo', 'currentAddress', 'address', e.target.value)}
+                    onChange={(e) =>
+                      handleNestedChange(
+                        "personalInfo",
+                        "currentAddress",
+                        "address",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     rows="3"
                     placeholder="Enter full address"
@@ -249,31 +312,58 @@ const InterestForm = () => {
 
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      City
+                    </label>
                     <input
                       type="text"
                       value={formData.personalInfo.currentAddress.city}
-                      onChange={(e) => handleNestedChange('personalInfo', 'currentAddress', 'city', e.target.value)}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "personalInfo",
+                          "currentAddress",
+                          "city",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                       placeholder="City"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">State</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      State
+                    </label>
                     <input
                       type="text"
                       value={formData.personalInfo.currentAddress.state}
-                      onChange={(e) => handleNestedChange('personalInfo', 'currentAddress', 'state', e.target.value)}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "personalInfo",
+                          "currentAddress",
+                          "state",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                       placeholder="State"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">PIN Code</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      PIN Code
+                    </label>
                     <input
                       type="text"
                       value={formData.personalInfo.currentAddress.pin}
-                      onChange={(e) => handleNestedChange('personalInfo', 'currentAddress', 'pin', e.target.value)}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "personalInfo",
+                          "currentAddress",
+                          "pin",
+                          e.target.value,
+                        )
+                      }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                       placeholder="PIN"
                     />
@@ -284,8 +374,10 @@ const InterestForm = () => {
 
             {/* Educational Background */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">Educational Background</h2>
-              
+              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">
+                Educational Background
+              </h2>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -294,7 +386,13 @@ const InterestForm = () => {
                   <input
                     type="text"
                     value={formData.education.highestQualification}
-                    onChange={(e) => handleChange('education', 'highestQualification', e.target.value)}
+                    onChange={(e) =>
+                      handleChange(
+                        "education",
+                        "highestQualification",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="e.g., Bachelor's in Commerce"
                   />
@@ -307,7 +405,9 @@ const InterestForm = () => {
                   <input
                     type="number"
                     value={formData.education.yearOfPassing}
-                    onChange={(e) => handleChange('education', 'yearOfPassing', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("education", "yearOfPassing", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="e.g., 2020"
                   />
@@ -349,8 +449,10 @@ const InterestForm = () => {
 
             {/* Work Experience */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">Work Experience (Optional)</h2>
-              
+              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">
+                Work Experience (Optional)
+              </h2>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -359,7 +461,9 @@ const InterestForm = () => {
                   <input
                     type="text"
                     value={formData.workExperience.jobTitle}
-                    onChange={(e) => handleChange('workExperience', 'jobTitle', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("workExperience", "jobTitle", e.target.value)
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="e.g., Junior Accountant"
                   />
@@ -372,7 +476,13 @@ const InterestForm = () => {
                   <input
                     type="text"
                     value={formData.workExperience.companyName}
-                    onChange={(e) => handleChange('workExperience', 'companyName', e.target.value)}
+                    onChange={(e) =>
+                      handleChange(
+                        "workExperience",
+                        "companyName",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="Company name"
                   />
@@ -385,7 +495,13 @@ const InterestForm = () => {
                   <input
                     type="number"
                     value={formData.workExperience.yearsOfExperience}
-                    onChange={(e) => handleChange('workExperience', 'yearsOfExperience', e.target.value)}
+                    onChange={(e) =>
+                      handleChange(
+                        "workExperience",
+                        "yearsOfExperience",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="e.g., 2"
                   />
@@ -398,7 +514,13 @@ const InterestForm = () => {
                 </label>
                 <textarea
                   value={formData.workExperience.responsibilities}
-                  onChange={(e) => handleChange('workExperience', 'responsibilities', e.target.value)}
+                  onChange={(e) =>
+                    handleChange(
+                      "workExperience",
+                      "responsibilities",
+                      e.target.value,
+                    )
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                   rows="3"
                   placeholder="Describe your key responsibilities..."
@@ -408,15 +530,19 @@ const InterestForm = () => {
 
             {/* Interest & Availability */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">Interest & Availability</h2>
-              
+              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">
+                Interest & Availability
+              </h2>
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Why do you want to join our team?
                 </label>
                 <textarea
                   value={formData.interestInfo.whyJoin}
-                  onChange={(e) => handleChange('interestInfo', 'whyJoin', e.target.value)}
+                  onChange={(e) =>
+                    handleChange("interestInfo", "whyJoin", e.target.value)
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                   rows="4"
                   placeholder="Tell us why you're interested..."
@@ -429,7 +555,9 @@ const InterestForm = () => {
                 </label>
                 <textarea
                   value={formData.interestInfo.careerGoals}
-                  onChange={(e) => handleChange('interestInfo', 'careerGoals', e.target.value)}
+                  onChange={(e) =>
+                    handleChange("interestInfo", "careerGoals", e.target.value)
+                  }
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                   rows="4"
                   placeholder="Share your career aspirations..."
@@ -444,7 +572,13 @@ const InterestForm = () => {
                   <input
                     type="text"
                     value={formData.interestInfo.availability}
-                    onChange={(e) => handleChange('interestInfo', 'availability', e.target.value)}
+                    onChange={(e) =>
+                      handleChange(
+                        "interestInfo",
+                        "availability",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                     placeholder="e.g., Immediate or 30 days"
                   />
@@ -456,7 +590,13 @@ const InterestForm = () => {
                   </label>
                   <select
                     value={formData.interestInfo.sourceOfAwareness}
-                    onChange={(e) => handleChange('interestInfo', 'sourceOfAwareness', e.target.value)}
+                    onChange={(e) =>
+                      handleChange(
+                        "interestInfo",
+                        "sourceOfAwareness",
+                        e.target.value,
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
                   >
                     <option value="">Select source</option>
@@ -469,22 +609,44 @@ const InterestForm = () => {
                 </div>
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Upload Resume (PDF/DOC/DOCX){" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => setResumeFile(e.target.files[0])}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+              />
+            </div>
 
             {/* Consent & Declaration */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">Consent & Declaration</h2>
-              
+              <h2 className="text-2xl font-bold text-gray-900 border-b pb-2">
+                Consent & Declaration
+              </h2>
+
               <div className="space-y-4">
                 <label className="flex items-start space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
                     required
                     checked={formData.consent.accuracyDeclaration}
-                    onChange={(e) => handleChange('consent', 'accuracyDeclaration', e.target.checked)}
+                    onChange={(e) =>
+                      handleChange(
+                        "consent",
+                        "accuracyDeclaration",
+                        e.target.checked,
+                      )
+                    }
                     className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
                   <span className="text-gray-700">
-                    I declare that all the information provided is accurate to the best of my knowledge.
+                    I declare that all the information provided is accurate to
+                    the best of my knowledge.
                   </span>
                 </label>
 
@@ -493,11 +655,18 @@ const InterestForm = () => {
                     type="checkbox"
                     required
                     checked={formData.consent.dataProcessingConsent}
-                    onChange={(e) => handleChange('consent', 'dataProcessingConsent', e.target.checked)}
+                    onChange={(e) =>
+                      handleChange(
+                        "consent",
+                        "dataProcessingConsent",
+                        e.target.checked,
+                      )
+                    }
                     className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
                   <span className="text-gray-700">
-                    I consent to the processing of my personal data for recruitment purposes.
+                    I consent to the processing of my personal data for
+                    recruitment purposes.
                   </span>
                 </label>
               </div>
@@ -510,7 +679,7 @@ const InterestForm = () => {
                 disabled={loading}
                 className="flex-1 bg-primary-600 text-white py-4 rounded-lg hover:bg-primary-700 transition font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Submit Interest Form'}
+                {loading ? "Submitting..." : "Submit Interest Form"}
               </button>
             </div>
           </form>
