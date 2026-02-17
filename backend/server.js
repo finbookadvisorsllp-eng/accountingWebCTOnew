@@ -56,8 +56,10 @@ app.use("/api/businesses", require("./routes/businessRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/audit", require("./routes/auditRoutes"));
 
-// Legacy routes (keep for backward compatibility)
+// Legacy routes (old system - Admin/Employee)
 app.use("/api/candidates", require("./routes/candidateRoutes"));
+app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/employee", require("./routes/employeeRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
 
 // Health check route

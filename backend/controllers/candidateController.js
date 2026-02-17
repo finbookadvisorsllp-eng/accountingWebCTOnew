@@ -624,3 +624,274 @@ exports.deleteCandidate = async (req, res) => {
     });
   }
 };
+
+// ==================== OLD SYSTEM (Employee) ADDITIONAL FUNCTIONS ====================
+
+// @desc    Add interest to candidate (Employee)
+// @route   PUT /api/employee/candidates/:id/interest
+// @access  Private (Employee)
+exports.addInterest = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found",
+      });
+    }
+
+    // Add interest tracking
+    candidate.interestInfo = {
+      ...candidate.interestInfo,
+      ...req.body,
+      lastUpdated: new Date(),
+    };
+
+    await candidate.save();
+
+    res.json({
+      success: true,
+      message: "Interest updated successfully",
+      data: candidate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Add exit information to candidate (Employee)
+// @route   POST /api/employee/candidates/:id/exit
+// @access  Private (Employee)
+exports.addExit = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found",
+      });
+    }
+
+    // Update exit information
+    candidate.exitedPersonalInfo = {
+      ...candidate.exitedPersonalInfo,
+      ...req.body,
+      lastUpdated: new Date(),
+    };
+
+    candidate.status = "EXITED";
+    await candidate.save();
+
+    res.json({
+      success: true,
+      message: "Exit information added successfully",
+      data: candidate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Get employee profile
+// @route   GET /api/employee/profile
+// @access  Private (Employee)
+exports.getEmployeeProfile = async (req, res) => {
+  try {
+    // Find candidate with employeeId matching the logged-in user
+    const candidate = await Candidate.findOne({
+      "adminInfo.employeeId": req.user.employeeId || req.user.email,
+    });
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee profile not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: candidate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Update employee profile
+// @route   PUT /api/employee/profile
+// @access  Private (Employee)
+exports.updateProfile = async (req, res) => {
+  try {
+    const candidate = await Candidate.findOne({
+      "adminInfo.employeeId": req.user.employeeId || req.user.email,
+    });
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee profile not found",
+      });
+    }
+
+    // Update allowed fields
+    const updates = {
+      personalInfo: { ...candidate.personalInfo, ...req.body.personalInfo },
+      contactInfo: { ...candidate.contactInfo, ...req.body.contactInfo },
+      employeeContactInfo: {
+        ...candidate.employeeContactInfo,
+        ...req.body.employeeContactInfo,
+      },
+    };
+
+    Object.assign(candidate, updates);
+    await candidate.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: candidate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ==================== OLD SYSTEM (Admin) ADDITIONAL FUNCTIONS ====================
+
+// @desc    Get admin dashboard stats
+// @route   GET /api/admin/dashboard/stats
+// @access  Private (Admin)
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const stats = await Candidate.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const totalCandidates = await Candidate.countDocuments();
+    const activeEmployees = await Candidate.countDocuments({ status: "ACTIVE" });
+
+    const formattedStats = {
+      totalCandidates,
+      activeEmployees,
+      pendingApprovals: await Candidate.countDocuments({ status: "EXITED" }),
+      byStatus: {},
+    };
+
+    stats.forEach((stat) => {
+      formattedStats.byStatus[stat._id] = stat.count;
+    });
+
+    res.json({
+      success: true,
+      data: formattedStats,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Get all employees (for admin)
+// @route   GET /api/admin/employees
+// @access  Private (Admin)
+exports.getAllEmployees = async (req, res) => {
+  try {
+    const employees = await Candidate.find({
+      status: "ACTIVE",
+      adminInfo: { $exists: true },
+    }).select(
+      "personalInfo contactInfo adminInfo employeeContactInfo status createdAt"
+    );
+
+    res.json({
+      success: true,
+      data: employees,
+      total: employees.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Get employee profile by ID (for admin)
+// @route   GET /api/admin/employees/:id
+// @access  Private (Admin)
+exports.getEmployeeProfile = async (req, res) => {
+  try {
+    const employee = await Candidate.findById(req.params.id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: employee,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Update employee profile by ID (for admin)
+// @route   PUT /api/admin/employees/:id
+// @access  Private (Admin)
+exports.updateEmployeeProfile = async (req, res) => {
+  try {
+    const employee = await Candidate.findById(req.params.id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Update fields
+    Object.assign(employee, req.body);
+    await employee.save();
+
+    res.json({
+      success: true,
+      message: "Employee profile updated successfully",
+      data: employee,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+

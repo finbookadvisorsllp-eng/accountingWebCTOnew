@@ -90,4 +90,36 @@ export const auditAPI = {
   getAuditSummary: (params) => api.get('/audit/summary', { params })
 };
 
+// ==================== OLD SYSTEM (Admin/Employee) APIs ====================
+// Candidate APIs
+export const candidateAPI = {
+  getAllCandidates: (params) => api.get('/admin/candidates', { params }),
+  getCandidate: (id) => api.get(`/admin/candidates/${id}`),
+  createCandidate: (data) => api.post('/admin/candidates', data),
+  updateCandidate: (id, data) => api.put(`/admin/candidates/${id}`, data),
+  deleteCandidate: (id) => api.delete(`/admin/candidates/${id}`),
+  addInterest: (id, data) => api.post(`/admin/candidates/${id}/interest`, data),
+  addExit: (id, data) => api.post(`/admin/candidates/${id}/exit`, data),
+  getStats: () => api.get('/admin/candidates/stats'),
+  getEmployeeCandidates: () => api.get('/employee/candidates'),
+  updateCandidateStatus: (id, data) => api.patch(`/admin/candidates/${id}/status`, data)
+};
+
+// Employee APIs (Old System)
+export const employeeAPI = {
+  getProfile: () => api.get('/employee/profile'),
+  updateProfile: (data) => api.put('/employee/profile', data),
+  getAssignedCandidates: () => api.get('/employee/candidates'),
+  updateCandidateInterest: (id, data) => api.put(`/employee/candidates/${id}/interest`, data),
+  reportExit: (id, data) => api.post(`/employee/candidates/${id}/exit`, data)
+};
+
+// Admin APIs (Old System)
+export const adminAPI = {
+  getDashboardStats: () => api.get('/admin/dashboard/stats'),
+  getAllEmployees: () => api.get('/admin/employees'),
+  getEmployeeProfile: (id) => api.get(`/admin/employees/${id}`),
+  updateEmployeeProfile: (id, data) => api.put(`/admin/employees/${id}`, data)
+};
+
 export default api;
