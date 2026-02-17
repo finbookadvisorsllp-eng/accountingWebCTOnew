@@ -1,179 +1,151 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { FaUser, FaLock, FaCalculator } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaBuilding } from 'react-icons/fa';
 import useAuthStore from '../store/authStore';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, employeeLogin, loading } = useAuthStore();
+  const { login, isLoading, error } = useAuthStore();
   
-  const [loginType, setLoginType] = useState('admin' ); // admin, advisor, client, employee
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    employeeId: ''
+    password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    setFormError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.email || !formData.password) {
+      setFormError('Please fill in all fields');
+      return;
+    }
 
-    try {
-      if (loginType === 'employee') {
-        await employeeLogin({
-          employeeId: formData.employeeId,
-          password: formData.password
-        });
-        toast.success('Login successful!');
-        navigate('/employee/dashboard');
+    const result = await login(formData.email, formData.password);
+    
+    if (result.success) {
+      // Redirect based on role
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user.needsPasswordChange) {
+        navigate('/change-password');
       } else {
-        await login({
-          email: formData.email,
-          password: formData.password,
-          role: loginType
-        });
-        toast.success('Login successful!');
-        
-        if (loginType === 'admin' || loginType === 'advisor') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/');
-        }
+        navigate(`/${user.role.toLowerCase()}`);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+    } else {
+      setFormError(result.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 px-4 py-12">
+      <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:60px_60px]" />
+      
+      <div className="relative w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <Link to="/" className="flex items-center justify-center space-x-2 mb-4">
-            <FaCalculator className="text-4xl text-primary-600" />
-            <span className="text-3xl font-bold text-gray-800">AccounTech</span>
-          </Link>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600">Sign in to your account</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-4">
+            <FaBuilding className="text-3xl text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white">CA Platform</h1>
+          <p className="text-blue-200 mt-2">Multi-Level Hierarchical Accounting System</p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Role Selector */}
-          <div className="grid grid-cols-4 gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
-            {['admin', 'advisor', 'client', 'employee'].map((type) => (
-              <button
-                key={type}
-                onClick={() => setLoginType(type)}
-                className={`py-2 px-3 rounded-md text-sm font-semibold transition ${
-                  loginType === type
-                    ? 'bg-primary-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
-          </div>
+        {/* Login Form */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            Sign in to your account
+          </h2>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {loginType === 'employee' ? (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Employee ID
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaUser className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    name="employeeId"
-                    value={formData.employeeId}
-                    onChange={handleChange}
-                    required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
-                    placeholder="Enter your employee ID"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaUser className="text-gray-400" />
-                  </div>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
-                    placeholder="Enter your email"
-                  />
-                </div>
-              </div>
-            )}
+          {(error || formError) && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error || formError}</p>
+            </div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Password
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaLock className="text-gray-400" />
+                  <FaEnvelope className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
+                  type="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
-                  placeholder="Enter your password"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="you@example.com"
                 />
               </div>
             </div>
 
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaLock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  {showPassword ? (
+                    <FaEyeSlash className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <FaEye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 transition font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
-          {/* Additional Links */}
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/get-started" className="text-primary-600 font-semibold hover:text-primary-700">
-                Get Started
-              </Link>
+            <p className="text-sm text-gray-600">
+              Demo Credentials:
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              CA: admin@ca.com / Admin@123
             </p>
           </div>
         </div>
 
-        {/* Back to Home */}
-        <div className="text-center mt-6">
-          <Link to="/" className="text-gray-600 hover:text-gray-900 transition">
-            ← Back to Home
-          </Link>
-        </div>
+        <p className="text-center mt-6 text-blue-200 text-sm">
+          © 2024 Multi-Level Hierarchical Accounting Platform
+        </p>
       </div>
     </div>
   );

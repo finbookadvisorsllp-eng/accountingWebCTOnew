@@ -1,18 +1,21 @@
-import { Navigate } from 'react-router-dom';
+import React from 'react';
+import { Outlet, Navigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
-const PrivateRoute = ({ children, allowedRoles = [] }) => {
-  const { user, token } = useAuthStore();
+const PrivateRoute = ({ allowedRoles }) => {
+  const { isAuthenticated, user } = useAuthStore();
 
-  if (!token || !user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    // Redirect to appropriate dashboard based on role
+    const redirectPath = `/${user?.role?.toLowerCase()}`;
+    return <Navigate to={redirectPath} replace />;
   }
 
-  return children;
+  return <Outlet />;
 };
 
 export default PrivateRoute;
