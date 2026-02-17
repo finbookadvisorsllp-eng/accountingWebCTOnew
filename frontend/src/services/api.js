@@ -1,97 +1,93 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-
+// Create axios instance with default config
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: {
-    "Content-Type": "application/json",
-  },
+    'Content-Type': 'application/json'
+  }
 });
 
-// Add token to requests if available
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error)
 );
 
-// Handle response errors
+// Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
-  },
+  }
 );
 
-// Auth endpoints
+// Auth APIs
 export const authAPI = {
-  login: (credentials) => api.post("/auth/login", credentials),
-  employeeLogin: (credentials) => api.post("/auth/employee-login", credentials),
-  register: (userData) => api.post("/auth/register", userData),
-  getMe: () => api.get("/auth/me"),
+  login: (data) => api.post('/auth/login', data),
+  register: (data) => api.post('/auth/register', data),
+  getMe: () => api.get('/auth/me'),
+  changePassword: (data) => api.post('/auth/change-password', data),
+  activateClient: (data) => api.post('/auth/activate-client', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
+  logout: () => api.post('/auth/logout')
 };
 
-// Candidate endpoints
-export const candidateAPI = {
-  // submitInterestForm: (data) => api.post('/candidates/interest', data),
-  // 🔥 IMPORTANT CHANGE: multipart support
-  submitInterestForm: (data) =>
-    api.post("/candidates/interest", data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }),
-
-  checkCandidate: (data) => api.post("/candidates/check", data),
-  submitExitedForm: (data) => api.post("/candidates/exited", data),
-  getCandidates: (params) => api.get("/candidates", { params }),
-  getCandidate: (id) => api.get(`/candidates/${id}`),
-  allowExited: (id) => api.put(`/candidates/${id}/allow-exited`),
-  approveCandidate: (id, data) => api.post(`/candidates/${id}/approve`, data),
-  updateAdminFields: (id, data) =>
-    api.put(`/candidates/${id}/admin-update`, data),
-  finalConfirmation: (id, data) =>
-    api.put(`/candidates/${id}/final-confirmation`, data),
-  getStats: () => api.get("/candidates/stats"),
-  deleteCandidate: (id) => api.delete(`/candidates/${id}`),
+// User APIs
+export const userAPI = {
+  getUsers: (params) => api.get('/users', { params }),
+  getUser: (id) => api.get(`/users/${id}`),
+  updateUser: (id, data) => api.put(`/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/users/${id}`),
+  assignSubordinate: (id, data) => api.post(`/users/${id}/assign`, data),
+  removeSubordinate: (parentId, subordinateId) => api.delete(`/users/${parentId}/subordinates/${subordinateId}`),
+  getHierarchy: () => api.get('/users/hierarchy/tree')
 };
 
-// Upload endpoints
-export const uploadAPI = {
-  uploadSingle: (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    return api.post("/upload/single", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  },
-  uploadMultiple: (files) => {
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
-    return api.post("/upload/multiple", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  },
+// Client APIs
+export const clientAPI = {
+  createClient: (data) => api.post('/clients', data),
+  getClients: (params) => api.get('/clients', { params }),
+  getClient: (id) => api.get(`/clients/${id}`),
+  updateClient: (id, data) => api.put(`/clients/${id}`, data),
+  deleteClient: (id) => api.delete(`/clients/${id}`),
+  assignClient: (id, data) => api.post(`/clients/${id}/assign`, data),
+  getClientStats: () => api.get('/clients/stats')
+};
+
+// Business APIs
+export const businessAPI = {
+  createBusiness: (data) => api.post('/businesses', data),
+  getBusinesses: (params) => api.get('/businesses', { params }),
+  getBusiness: (id) => api.get(`/businesses/${id}`),
+  updateBusiness: (id, data) => api.put(`/businesses/${id}`, data),
+  deleteBusiness: (id) => api.delete(`/businesses/${id}`),
+  assignBusiness: (id, data) => api.post(`/businesses/${id}/assign`, data),
+  getBusinessStats: () => api.get('/businesses/stats')
+};
+
+// Dashboard APIs
+export const dashboardAPI = {
+  getDashboard: () => api.get('/dashboard'),
+  getHierarchy: () => api.get('/dashboard/hierarchy'),
+  getActivities: (params) => api.get('/dashboard/activities', { params })
+};
+
+// Audit APIs
+export const auditAPI = {
+  getAuditLogs: (params) => api.get('/audit', { params }),
+  getAuditSummary: (params) => api.get('/audit/summary', { params })
 };
 
 export default api;

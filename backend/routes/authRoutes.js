@@ -3,14 +3,29 @@ const router = express.Router();
 const {
   register,
   login,
-  employeeLogin,
-  getMe
+  getMe,
+  changePassword,
+  activateClient,
+  resetUserPassword,
+  logout
 } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/auth');
+const { validate, userValidation } = require('../middleware/validation');
 
-router.post('/register', protect, authorize('admin'), register);
-router.post('/login', login);
-router.post('/employee-login', employeeLogin);
-router.get('/me', protect, getMe);
+// Public routes
+router.post('/login', validate(userValidation.login), login);
+
+// Protected routes
+router.use(protect);
+
+// Auth routes
+router.get('/me', getMe);
+router.post('/logout', logout);
+router.post('/change-password', validate(userValidation.changePassword), changePassword);
+
+// CA-only routes
+router.post('/register', authorize('CA', 'ACCOUNTANT'), validate(userValidation.register), register);
+router.post('/activate-client', authorize('CA'), activateClient);
+router.post('/reset-password', authorize('CA'), resetUserPassword);
 
 module.exports = router;

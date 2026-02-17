@@ -50,6 +50,13 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Mount routers
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/clients", require("./routes/clientRoutes"));
+app.use("/api/businesses", require("./routes/businessRoutes"));
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+app.use("/api/audit", require("./routes/auditRoutes"));
+
+// Legacy routes (keep for backward compatibility)
 app.use("/api/candidates", require("./routes/candidateRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
 
@@ -66,8 +73,9 @@ app.get("/api/health", (req, res) => {
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Accounting Advisory Platform API",
-    version: "1.0.0",
+    message: "Multi-Level Hierarchical Accountant Management Platform API",
+    version: "2.0.0",
+    description: "CA → Accountants → Clients → Businesses (Multiple) - Hierarchical Management System"
   });
 });
 

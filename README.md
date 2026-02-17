@@ -1,265 +1,476 @@
-# Accounting & Advisory Platform
+# Multi-Level Hierarchical Accountant Management Platform
 
-A comprehensive MERN stack web application for managing recruitment and employee onboarding for an accounting and advisory firm.
+A comprehensive, enterprise-grade accounting management system designed for chartered accountants and their teams to manage clients, accountants, and multiple businesses in a hierarchical structure.
 
-## Features
+## 🏗️ System Architecture
 
-### Public Features
-- **Professional Landing Page** - Showcases services and company information
-- **Interest Form** - Quick form for candidates to express interest (~20% profile)
-- **Exited Form** - Comprehensive application form with auto-fetch capability (~50% profile)
-- **Auto-fetch Logic** - Existing candidates can auto-populate data from interest form
+```
+CA (Level 0)
+   ├── Senior Accountant (Level 1)
+   │        ├── Junior Accountant (Level 2)
+   │        │         ├── Clients
+   │        │               ├── Businesses
+   │        ├── Clients
+   │               ├── Businesses
+   ├── Clients
+          ├── Businesses
+```
 
-### Authentication & Roles
-- **Admin** - Full access to manage candidates and system
-- **Advisor** - Can view and manage candidate details
-- **Client** - View-only access (placeholder for future)
-- **Employee** - Access to personal dashboard for final confirmation
+## ✨ Key Features
 
-### Admin Panel
-- **Dashboard** - Overview of recruitment statistics
-- **Candidate Management** - View, filter, and manage all candidates
-- **Status Management** - Move candidates through workflow stages
-- **Approval System** - Generate employee IDs and credentials
+### 🔐 Role-Based Access Control
+- **CA (Chartered Accountant)**: Full system access, user management, hierarchy control
+- **Senior Accountant**: Manage own clients, businesses, and junior accountants
+- **Junior Accountant**: Manage assigned clients and businesses
+- **Client**: View own businesses and assigned accountant information
 
-### Workflow Stages
-1. **INTERESTED** (20%) - Initial interest form submitted
-2. **ALLOWED_EXITED** (20%) - Admin allows candidate to fill exited form
-3. **EXITED** (50%) - Comprehensive application submitted
-4. **APPROVED** (80%) - Admin approves and generates credentials
-5. **ACTIVE** (100%) - Employee confirms and activates profile
+### 📊 Hierarchical Management
+- Multi-level user hierarchy with parent-child relationships
+- Parent users can access child data and activities
+- Child users can only access their own and subordinate data
+- Recursive access control with proper permission validation
 
-## Tech Stack
+### 🏢 Multi-Business Support
+- Each client can have multiple businesses
+- Separate GST, PAN, compliance tracking per business
+- Business-level assignment to accountants
+- Comprehensive compliance monitoring
 
-### Backend
-- **Node.js** & **Express.js** - Server and API
-- **MongoDB** & **Mongoose** - Database
-- **JWT** - Authentication
-- **Bcrypt** - Password hashing
-- **Multer** - File uploads
-- **Express Validator** - Input validation
+### 👥 Client Management
+- CA-controlled client onboarding (no self-registration)
+- Client profile management with contact details
+- Company information and compliance tracking
+- Client assignment to accountants
+- Status management (Active/Inactive/Pending Activation)
 
-### Frontend
-- **React.js** - UI framework
-- **React Router** - Navigation
-- **TailwindCSS** - Styling
-- **Zustand** - State management
-- **Axios** - HTTP client
-- **React Toastify** - Notifications
-- **React Icons** - Icons
+### 📈 Dashboard & Analytics
+- Role-based custom dashboards
+- Real-time compliance status monitoring
+- Business performance metrics
+- Team hierarchy visualization
+- Activity tracking and audit logs
 
-## Installation & Setup
+### 🔒 Security & Compliance
+- JWT-based authentication
+- Hierarchical data access control
+- Comprehensive audit logging
+- Password security with forced changes
+- Status-based account management
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB (local or MongoDB Atlas)
-- npm or yarn
+- Node.js (v16+)
+- MongoDB (v4.4+)
+- React.js (v18+)
 
-### Backend Setup
+### Installation
 
-1. Navigate to backend directory:
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ca-platform
+   ```
+
+2. **Backend Setup**
+   ```bash
+   cd backend
+   npm install
+   cp .env.example .env
+   # Edit .env with your MongoDB URI and JWT secret
+   npm run seed  # Seed initial data
+   npm run dev   # Start development server
+   ```
+
+3. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev   # Start development server
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:5000
+
+### Default Login Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| CA | admin@ca.com | Admin@123 |
+| Senior Accountant | senior@ca.com | Senior@123 |
+| Junior Accountant | junior@ca.com | Junior@123 |
+| Client | client1@example.com | Client@123 |
+
+## 📋 API Documentation
+
+### Authentication Endpoints
+
+```http
+POST /api/auth/login
+POST /api/auth/register
+GET /api/auth/me
+POST /api/auth/change-password
+POST /api/auth/activate-client
+POST /api/auth/logout
+```
+
+### User Management
+
+```http
+GET /api/users                 # Get users (hierarchical access)
+GET /api/users/:id             # Get single user
+PUT /api/users/:id             # Update user
+DELETE /api/users/:id          # Delete user (CA only)
+POST /api/users/:id/assign     # Assign subordinate
+GET /api/users/hierarchy/tree  # Get hierarchy tree
+```
+
+### Client Management
+
+```http
+POST /api/clients              # Create client (CA only)
+GET /api/clients               # Get clients
+GET /api/clients/:id           # Get single client
+PUT /api/clients/:id           # Update client
+DELETE /api/clients/:id        # Delete client (CA only)
+POST /api/clients/:id/assign   # Assign client to accountant
+GET /api/clients/stats         # Get client statistics
+```
+
+### Business Management
+
+```http
+POST /api/businesses           # Create business
+GET /api/businesses            # Get businesses
+GET /api/businesses/:id        # Get single business
+PUT /api/businesses/:id        # Update business
+DELETE /api/businesses/:id     # Delete business (CA only)
+POST /api/businesses/:id/assign # Assign business to accountant
+GET /api/businesses/stats      # Get business statistics
+```
+
+### Dashboard
+
+```http
+GET /api/dashboard             # Get role-based dashboard data
+GET /api/dashboard/hierarchy   # Get hierarchy visualization
+GET /api/dashboard/activities  # Get recent activities
+```
+
+## 🗄️ Database Schema
+
+### Users Collection
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  email: String (unique),
+  password: String (hashed),
+  role: String (CA | ACCOUNTANT | CLIENT),
+  level: Number,
+  parentId: ObjectId (ref: Users),
+  phone: String,
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String
+  },
+  status: String (ACTIVE | INACTIVE | PENDING_ACTIVATION),
+  mustChangePassword: Boolean,
+  employeeId: String (unique),
+  createdBy: ObjectId (ref: Users),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### ClientProfiles Collection
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: Users, unique),
+  contactPerson: {
+    name: String,
+    designation: String,
+    email: String,
+    phone: String
+  },
+  companyDetails: {
+    registrationNumber: String,
+    incorporationDate: Date,
+    companyType: String,
+    industryType: String,
+    financialYearStart: String
+  },
+  complianceDetails: {
+    gstRegistered: Boolean,
+    panNumber: String,
+    tanNumber: String,
+    cinNumber: String
+  },
+  assignedTo: ObjectId (ref: Users),
+  status: String (ACTIVE | INACTIVE | ON_HOLD),
+  createdBy: ObjectId (ref: Users),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Businesses Collection
+```javascript
+{
+  _id: ObjectId,
+  clientId: ObjectId (ref: ClientProfiles),
+  businessName: String,
+  businessType: String,
+  registrationDetails: {
+    registrationNumber: String,
+    incorporationDate: Date,
+    registrationAuthority: String
+  },
+  taxDetails: {
+    panNumber: String,
+    tanNumber: String,
+    gstNumber: String,
+    cinNumber: String
+  },
+  address: {
+    registered: { street, city, state, zipCode, country },
+    operational: { street, city, state, zipCode, country }
+  },
+  financialDetails: {
+    turnover: Number,
+    employeesCount: Number,
+    financialYear: String,
+    booksMaintained: String
+  },
+  complianceStatus: {
+    gstReturn: { status, lastFiled, nextDue },
+    incomeTax: { status, lastFiled, nextDue },
+    annualReturn: { status, lastFiled, nextDue }
+  },
+  assignedTo: ObjectId (ref: Users),
+  status: String (ACTIVE | INACTIVE | DORMANT | CLOSED),
+  createdBy: ObjectId (ref: Users),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+## 🛠️ Technology Stack
+
+### Backend
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **MongoDB** - Database
+- **Mongoose** - ODM
+- **JWT** - Authentication
+- **bcryptjs** - Password hashing
+- **Joi** - Validation
+- **helmet** - Security middleware
+
+### Frontend
+- **React 18** - UI library
+- **React Router** - Navigation
+- **Zustand** - State management
+- **TailwindCSS** - Styling
+- **Axios** - HTTP client
+- **React Icons** - Icon library
+- **React Toastify** - Notifications
+
+### Development
+- **Vite** - Build tool
+- **Nodemon** - Development server
+- **ESLint** - Code linting
+
+## 📊 Dashboard Features
+
+### CA Dashboard
+- **Total Statistics**: Clients, businesses, accountants overview
+- **Accountant Management**: View all accountants with client/business counts
+- **Hierarchy Control**: Manage user assignments and hierarchy
+- **Compliance Overview**: GST, Income Tax filing status across all businesses
+- **Quick Actions**: Create accountants, clients, manage assignments
+- **Recent Activity**: Latest user registrations and updates
+
+### Accountant Dashboard
+- **Team Management**: View and manage junior accountants
+- **Client Assignment**: See assigned clients and their status
+- **Business Oversight**: Monitor businesses and compliance status
+- **Pending Tasks**: Outstanding compliance work
+- **Performance Metrics**: Client and business counts
+
+### Client Dashboard
+- **Business Portfolio**: View all owned businesses
+- **Compliance Status**: GST and Income Tax filing status
+- **Assigned Accountant**: Contact information and support details
+- **Profile Management**: Update company and contact information
+- **Document Access**: Upload and manage business documents
+
+## 🔐 Security Features
+
+### Authentication & Authorization
+- JWT-based authentication with role claims
+- Password encryption using bcryptjs
+- Session management with token expiration
+- Multi-factor authentication ready
+
+### Access Control
+- Hierarchical permission system
+- Role-based route protection
+- Data isolation between hierarchy levels
+- Resource-level access validation
+
+### Audit & Compliance
+- Comprehensive audit logging
+- Activity tracking for all user actions
+- Compliance status monitoring
+- Security event logging
+
+## 🚦 Development Workflow
+
+### Phase 1: Core Architecture ✅
+- [x] Database schema design
+- [x] User hierarchy system
+- [x] Role-based authentication
+- [x] Basic CRUD operations
+
+### Phase 2: Assignment Engine ✅
+- [x] Client-to-accountant assignment
+- [x] Business-to-accountant assignment
+- [x] Hierarchical access control
+- [x] Assignment history tracking
+
+### Phase 3: Dashboard System ✅
+- [x] Role-based dashboards
+- [x] Real-time statistics
+- [x] Data visualization
+- [x] Responsive design
+
+### Phase 4: Reporting & Analytics ✅
+- [x] Compliance reporting
+- [x] Performance metrics
+- [x] Audit trails
+- [x] Activity monitoring
+
+## 📦 Project Structure
+
+```
+├── backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── seeders/
+│   ├── utils/
+│   └── server.js
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── store/
+│   │   ├── utils/
+│   │   └── App.jsx
+│   └── package.json
+└── README.md
+```
+
+## 🧪 Testing
+
+### API Testing
 ```bash
+# Test login
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@ca.com", "password": "Admin@123"}'
+
+# Test hierarchy access
+curl -X GET http://localhost:5000/api/users \
+  -H "Authorization: Bearer <token>"
+```
+
+### Database Seeding
+```bash
+# Reset and seed database
 cd backend
+npm run seed
 ```
 
-2. Install dependencies:
+## 🚀 Deployment
+
+### Production Environment Variables
 ```bash
-npm install
-```
-
-3. Configure environment variables:
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-```
-NODE_ENV=development
+NODE_ENV=production
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/ca_platform
+JWT_SECRET=your-production-jwt-secret
+FRONTEND_URL=https://yourdomain.com
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/accounting_advisory
-JWT_SECRET=your_secure_jwt_secret
-JWT_EXPIRE=30d
-UPLOAD_PATH=./uploads
-MAX_FILE_SIZE=5242880
 ```
 
-4. Seed admin user:
+### Build Commands
 ```bash
-node seeders/seedAdmin.js
-```
+# Backend
+npm start
 
-Default admin credentials:
-- Email: admin@accounting.com
-- Password: admin123
-
-5. Start the backend server:
-```bash
-npm run dev
-```
-
-The backend will run on http://localhost:5000
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-The frontend will run on http://localhost:5173
-
-### Run Both Servers Concurrently
-
-From the root directory:
-
-1. Install root dependencies:
-```bash
-npm install
-```
-
-2. Install all dependencies:
-```bash
-npm run install-all
-```
-
-3. Run both servers:
-```bash
-npm run dev
-```
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user (Admin only)
-- `POST /api/auth/login` - Login for admin/advisor/client
-- `POST /api/auth/employee-login` - Login for employees
-- `GET /api/auth/me` - Get current user
-
-### Candidates
-- `POST /api/candidates/interest` - Submit interest form (Public)
-- `POST /api/candidates/check` - Check existing candidate (Public)
-- `POST /api/candidates/exited` - Submit exited form (Public)
-- `GET /api/candidates` - Get all candidates (Auth)
-- `GET /api/candidates/:id` - Get candidate details (Auth)
-- `PUT /api/candidates/:id/allow-exited` - Allow exited form (Admin)
-- `POST /api/candidates/:id/approve` - Approve candidate (Admin)
-- `PUT /api/candidates/:id/admin-update` - Update admin fields (Admin)
-- `PUT /api/candidates/:id/final-confirmation` - Final confirmation (Employee)
-- `GET /api/candidates/stats` - Get statistics (Admin)
-- `DELETE /api/candidates/:id` - Delete candidate (Admin)
-
-### Uploads
-- `POST /api/upload/single` - Upload single file
-- `POST /api/upload/multiple` - Upload multiple files
-
-## Database Schema
-
-### User Model
-- Basic authentication for admin, advisors, and clients
-- Role-based access control
-
-### Candidate Model
-Single comprehensive model tracking entire journey:
-- Personal information (interest form)
-- Extended personal info (exited form)
-- Contact information
-- Family background
-- Education (basic and detailed)
-- Work experience (basic and detailed)
-- Professional interests
-- References
-- Documents
-- Admin fields (employee ID, credentials)
-- Contract and legal compliance
-- Final confirmation
-- Status and profile percentage tracking
-
-## Key Features Implementation
-
-### Auto-fetch Logic
-When filling the exited form, candidates can enter their email or mobile number. The system automatically:
-1. Checks for existing records
-2. Pre-fills personal information from interest form
-3. Locks pre-filled fields (read-only)
-4. Allows filling only additional fields
-
-### Profile Percentage Tracking
-- INTERESTED: 20%
-- ALLOWED_EXITED: 20%
-- EXITED: 50%
-- APPROVED: 80%
-- ACTIVE: 100%
-
-### Employee ID Generation
-Format: `EMP{YEAR}{4-digit-number}`
-Example: EMP20240001, EMP20240002, etc.
-
-### Security Features
-- JWT-based authentication
-- Password hashing with bcrypt
-- Role-based authorization
-- Input validation
-- Rate limiting
-- Helmet security headers
-- CORS configuration
-
-## Deployment
-
-### Backend Deployment
-1. Set environment variables on your hosting platform
-2. Update MONGO_URI to production database
-3. Set strong JWT_SECRET
-4. Configure file upload paths
-5. Deploy to platforms like Heroku, Railway, or DigitalOcean
-
-### Frontend Deployment
-1. Update API URL in environment
-2. Build the production bundle:
-```bash
+# Frontend
 npm run build
 ```
-3. Deploy to Vercel, Netlify, or similar platforms
 
-## Future Enhancements
+## 📈 Performance Optimization
 
-- Document upload with cloud storage (AWS S3, Cloudinary)
-- Email notifications for status changes
-- SMS notifications for important updates
-- Advanced filtering and search
-- Export candidates data to Excel/PDF
-- Interview scheduling system
-- Performance reviews module
-- Payroll integration
-- Client portal with actual features
-- Mobile responsive improvements
-- Dark mode support
+### Database Indexes
+- User email (unique)
+- User role and status
+- Hierarchical parent-child relationships
+- Client assignment indexes
+- Business tax number uniqueness
 
-## Contributing
+### Caching Strategy
+- JWT token caching
+- Dashboard data caching
+- Hierarchy tree caching
+- User session management
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create a feature branch
+3. Make changes with proper testing
+4. Submit a pull request
 
-## License
+## 📄 License
 
-MIT License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## 🆘 Support
 
-For support, email: support@accountech.com
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Refer to the API documentation
 
-## Authors
+## 🗓️ Roadmap
 
-AccounTech Advisory Development Team
+### Phase 5: Advanced Features
+- [ ] Document management system
+- [ ] GST return automation
+- [ ] Tax calendar integration
+- [ ] Email notifications
+- [ ] Advanced reporting
+
+### Phase 6: Integration
+- [ ] GST portal integration
+- [ ] Bank account aggregation
+- [ ] E-invoice generation
+- [ ] Audit trail reporting
+- [ ] Mobile application
+
+---
+
+**Built with ❤️ for the accounting community**
