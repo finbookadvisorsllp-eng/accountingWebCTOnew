@@ -94,4 +94,61 @@ export const uploadAPI = {
   },
 };
 
+// new add
+// Client endpoints
+export const clientAPI = {
+  createClient: (data) => api.post("/clients", data),
+  getClients: (params) => api.get("/clients", { params }),
+  getClient: (id) => api.get(`/clients/${id}`),
+  updateClient: (id, data) => api.put(`/clients/${id}`, data),
+  deleteClient: (id) => api.delete(`/clients/${id}`),
+  assignAccountant: (clientId, accountantId) =>
+    api.put(`/clients/${clientId}/assign`, { accountantId }),
+  getStats: () => api.get("/clients/stats"),
+};
+
+// User endpoints
+export const userAPI = {
+  getAccountants: () => api.get("/users/accountants"),
+  getAllUsers: (params) => api.get("/users", { params }),
+};
+// new update 19-02
+// Entity Type endpoints (MASTER DATA)
+export const entityTypeAPI = {
+  getAll: () => api.get("/entity-types"),
+  getOne: (id) => api.get(`/entity-types/${id}`),
+  create: (data) => api.post("/entity-types", data),
+  update: (id, data) => api.put(`/entity-types/${id}`, data),
+  remove: (id) => api.delete(`/entity-types/${id}`),
+};
+
+// Nature of Business endpoints (MASTER DATA)
+export const natureOfBusinessAPI = {
+  getAll: () => api.get("/nature-of-business"),
+  getOne: (id) => api.get(`/nature-of-business/${id}`),
+  create: (data) => api.post("/nature-of-business", data),
+  update: (id, data) => api.put(`/nature-of-business/${id}`, data),
+  remove: (id) => api.delete(`/nature-of-business/${id}`),
+};
+
+// Compliance Task endpoints (MASTER DATA)
+export const complianceTaskAPI = {
+  getAll: () => api.get("/compliance-tasks"),
+  getOne: (id) => api.get(`/compliance-tasks/${id}`),
+  create: (data) => api.post("/compliance-tasks", data),
+  update: (id, data) => api.put(`/compliance-tasks/${id}`, data),
+  remove: (id) => api.delete(`/compliance-tasks/${id}`),
+
+  // 🔥 dashboard
+  // getStats: () => api.get("/compliance-tasks/stats"),
+};
+
+export const complianceAPI = {
+  getAll: () => api.get("/compliances"),
+  getOne: (id) => api.get(`/compliances/${id}`),
+  create: (data) => api.post("/compliances", data),
+  update: (id, data) => api.put(`/compliances/${id}`, data),
+  remove: (id) => api.delete(`/compliances/${id}`),
+};
+
 export default api;

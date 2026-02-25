@@ -8,70 +8,108 @@ const rateLimit = require("express-rate-limit");
 const path = require("path");
 const connectDB = require("./config/db");
 
-// Load env vars
+// ================= ENV =================
 dotenv.config();
 
-// Connect to database
+// ================= DATABASE =================
 connectDB();
 
+// ================= APP INIT =================
 const app = express();
 
-// Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ================= SECURITY MIDDLEWARE =================
 
-// Enable CORS
-app.use(cors());
-
-// Security middleware
+// Secure HTTP headers
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
 
-// Compression middleware
+// Enable gzip compression
 app.use(compression());
 
-// Dev logging middleware
+// CORS Configuration (STRICT in production)
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.CLIENT_URL?.split(",")
+        : "*",
+    credentials: true,
+  }),
+);
+
+// ================= BODY PARSER =================
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+
+// ================= LOGGING =================
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 100,
-});
-app.use("/api/", limiter);
+// ================= RATE LIMITING =================
 
-// Static folder for uploads
+// General API limiter
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 1000, // allow general usage
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/api/", apiLimiter);
+
+// Strict Login limiter
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    success: false,
+    message: "Too many login attempts. Try again after 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/api/auth/login", loginLimiter);
+
+// ================= STATIC FILES =================
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Mount routers
+// ================= ROUTES =================
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/candidates", require("./routes/candidateRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/entity-types", require("./routes/entityType.routes"));
+app.use("/api/nature-of-business", require("./routes/natureOfBusiness.routes"));
+app.use("/api/compliance-tasks", require("./routes/complianceTasks.routes"));
+app.use("/api/compliances", require("./routes/compliance.routes"));
 
-// Health check route
+
+app.use("/api/clients", require("./routes/clients"));
+// ================= HEALTH CHECK =================
 app.get("/api/health", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
-    message: "Server is running",
+    status: "UP",
+    environment: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
   });
 });
 
-// Root route
+// ================= ROOT =================
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: "Accounting Advisory Platform API",
     version: "1.0.0",
   });
 });
 
-// 404 handler
+// ================= 404 HANDLER =================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -79,25 +117,39 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// ================= GLOBAL ERROR HANDLER =================
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("🔥 ERROR:", err);
+
   res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || "Server Error",
+    message:
+      process.env.NODE_ENV === "production"
+        ? "Internal Server Error"
+        : err.message,
   });
 });
 
+// ================= SERVER =================
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(
+    `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`,
+  );
 });
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err, promise) => {
-  console.log(`Error: ${err.message}`);
+// ================= GRACEFUL SHUTDOWN =================
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION 💥", err.message);
   server.close(() => process.exit(1));
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM RECEIVED. Shutting down gracefully.");
+  server.close(() => {
+    console.log("Process terminated.");
+  });
 });
 
 module.exports = app;

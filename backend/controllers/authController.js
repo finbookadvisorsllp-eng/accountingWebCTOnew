@@ -8,7 +8,7 @@ const bcrypt = require("bcryptjs");
 // @access  Private/Admin
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, employeeId } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -31,6 +31,7 @@ exports.register = async (req, res) => {
       email,
       password,
       role: role || "advisor",
+      employeeId,
     });
 
     res.status(201).json({
@@ -40,6 +41,7 @@ exports.register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        employeeId: user.employeeId,
         token: generateToken(user._id, user.role),
       },
     });
@@ -104,6 +106,7 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        employeeId: user.employeeId,
         token: generateToken(user._id, user.role),
       },
     });

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaEye, FaSearch, FaFilter } from "react-icons/fa";
+import { FaEye, FaSearch } from "react-icons/fa";
 import { candidateAPI } from "../../services/api";
 import AdminLayout from "../../components/AdminLayout";
 
-const CandidatesList = () => {
+const EmployeesList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ const CandidatesList = () => {
     setLoading(true);
     try {
       const response = await candidateAPI.getCandidates({
-        status: filters.status,
+        status: "ACTIVE",
         search: filters.search,
         page: pagination.currentPage,
         limit: 10,
@@ -73,16 +73,16 @@ const CandidatesList = () => {
         {/* Header - small & compact */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-base font-bold text-gray-800">Candidates</h1>
+            <h1 className="text-base font-bold text-gray-800">Employees</h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              Manage all candidate applications
+              Manage all employees applications
             </p>
           </div>
         </div>
 
         {/* Filters - compact */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-1 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">
                 <FaSearch className="inline mr-1.5" />
@@ -95,25 +95,6 @@ const CandidatesList = () => {
                 placeholder="Search by name, email, phone, employee ID..."
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                <FaFilter className="inline mr-1.5" />
-                Status Filter
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => handleFilterChange("status", e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              >
-                <option value="">All Status</option>
-                <option value="INTERESTED">Interested</option>
-                <option value="ALLOWED_EXITED">Allowed Exited</option>
-                <option value="EXITED">Exited</option>
-                <option value="APPROVED">Approved</option>
-                <option value="ACTIVE">Active</option>
-              </select>
             </div>
           </div>
         </div>
@@ -283,5 +264,4 @@ const CandidatesList = () => {
   );
 };
 
-export default CandidatesList;
-  
+export default EmployeesList;

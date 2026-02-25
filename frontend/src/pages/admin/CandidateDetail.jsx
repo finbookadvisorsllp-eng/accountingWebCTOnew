@@ -1,17 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  FaArrowLeft,
-  FaCheck,
-  FaTimes,
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt,
-} from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 import { candidateAPI } from "../../services/api";
 import AdminLayout from "../../components/AdminLayout";
+import InterestedCandidateDetail from "./InterestedCandidateDetail";
+import ExitedCandidateDetail from "./ExitedCandidateDetail";
 
 const CandidateDetail = () => {
   const { id } = useParams();
@@ -138,43 +132,53 @@ const CandidateDetail = () => {
     );
   }
 
+  // Decide which detail component to render
+  const isExitedCandidate =
+    candidate.status === "EXITED" ||
+    candidate.status === "APPROVED" ||
+    candidate.status === "ACTIVE" ||
+    candidate.detailedEducation?.length > 0 ||
+    candidate.detailedWorkExperience?.length > 0;
+
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header - modern, premium */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link
               to="/admin/candidates"
               className="p-2 hover:bg-gray-100 rounded-lg transition"
             >
-              <FaArrowLeft className="text-xl" />
+              <FaArrowLeft className="text-lg text-gray-600" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900">
                 {candidate.personalInfo?.firstName}{" "}
                 {candidate.personalInfo?.lastName}
               </h1>
               <div className="flex items-center space-x-3 mt-1">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(candidate.status)}`}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(
+                    candidate.status,
+                  )}`}
                 >
                   {candidate.status}
                 </span>
-                <span className="text-sm text-gray-600">
+                {/* <span className="text-sm text-gray-500">
                   Profile: {candidate.profilePercentage}% Complete
-                </span>
+                </span> */}
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - consistent, clean */}
           <div className="flex space-x-3">
             {candidate.status === "INTERESTED" && (
               <button
                 onClick={handleAllowExited}
                 disabled={actionLoading}
-                className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-semibold disabled:opacity-50"
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 shadow-sm"
               >
                 Allow Exited Form
               </button>
@@ -184,17 +188,16 @@ const CandidateDetail = () => {
               <button
                 onClick={() => setShowApproveModal(true)}
                 disabled={actionLoading}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 shadow-sm"
               >
                 Approve & Generate ID
               </button>
             )}
 
-            {/* Only show the update admin details button if the candidate is approved */}
             {candidate.status === "APPROVED" && (
               <button
                 onClick={() => navigate(`/admin/candidates/${id}/admin-edit`)}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm"
               >
                 Update Admin Details
               </button>
@@ -202,271 +205,31 @@ const CandidateDetail = () => {
             <button
               onClick={handleDelete}
               disabled={actionLoading}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold disabled:opacity-50"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 shadow-sm"
             >
               Delete
             </button>
           </div>
         </div>
 
-        {/* Contact Info Card */}
-        <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white shadow-lg">
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="flex items-center space-x-3">
-              <FaEnvelope className="text-2xl" />
-              <div>
-                <p className="text-primary-100 text-sm">Email</p>
-                <p className="font-semibold">
-                  {candidate.contactInfo?.email || "N/A"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <FaPhone className="text-2xl" />
-              <div>
-                <p className="text-primary-100 text-sm">Phone</p>
-                <p className="font-semibold">
-                  {candidate.personalInfo?.primaryContact?.number || "N/A"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <FaUser className="text-2xl" />
-              <div>
-                <p className="text-primary-100 text-sm">Employee ID</p>
-                <p className="font-semibold">
-                  {candidate.adminInfo?.employeeId || "Not Generated"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Details Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Resume Section */}
-          {candidate.documents?.resume && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-                Uploaded Resume
-              </h2>
-
-              <a
-                href={`http://localhost:5000${candidate.documents.resume}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold"
-              >
-                View Resume
-              </a>
-            </div>
-          )}
-
-          {/* Personal Information */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-              Personal Information
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600">Full Name</p>
-                <p className="font-semibold">
-                  {candidate.personalInfo?.firstName}{" "}
-                  {candidate.personalInfo?.lastName}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Date of Birth</p>
-                <p className="font-semibold">
-                  {candidate.personalInfo?.dateOfBirth
-                    ? new Date(
-                        candidate.personalInfo.dateOfBirth,
-                      ).toLocaleDateString()
-                    : "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Gender</p>
-                <p className="font-semibold">
-                  {candidate.personalInfo?.gender || "N/A"}
-                </p>
-              </div>
-              {candidate.exitedPersonalInfo?.maritalStatus && (
-                <div>
-                  <p className="text-sm text-gray-600">Marital Status</p>
-                  <p className="font-semibold">
-                    {candidate.exitedPersonalInfo.maritalStatus}
-                  </p>
-                </div>
-              )}
-              {candidate.exitedPersonalInfo?.nationality && (
-                <div>
-                  <p className="text-sm text-gray-600">Nationality</p>
-                  <p className="font-semibold">
-                    {candidate.exitedPersonalInfo.nationality}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Education */}
-          {candidate.education && (
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-                Education
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-600">Highest Qualification</p>
-                  <p className="font-semibold">
-                    {candidate.education.highestQualification || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Year of Passing</p>
-                  <p className="font-semibold">
-                    {candidate.education.yearOfPassing || "N/A"}
-                  </p>
-                </div>
-                {candidate.education.certifications?.length > 0 && (
-                  <div>
-                    <p className="text-sm text-gray-600">Certifications</p>
-                    <ul className="list-disc list-inside">
-                      {candidate.education.certifications.map((cert, index) => (
-                        <li key={index} className="font-semibold">
-                          {cert}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Detailed Education (if exited) */}
-        {candidate.detailedEducation?.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-              Detailed Education
-            </h2>
-            <div className="space-y-4">
-              {candidate.detailedEducation.map((edu, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Level</p>
-                      <p className="font-semibold">{edu.level}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Degree</p>
-                      <p className="font-semibold">{edu.degree}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Institution</p>
-                      <p className="font-semibold">{edu.institution}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Year & Percentage</p>
-                      <p className="font-semibold">
-                        {edu.yearOfPassing} - {edu.percentage}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Work Experience */}
-        {candidate.detailedWorkExperience?.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-              Work Experience
-            </h2>
-            <div className="space-y-4">
-              {candidate.detailedWorkExperience.map((work, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Company</p>
-                      <p className="font-semibold">{work.employerName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Position</p>
-                      <p className="font-semibold">{work.jobTitle}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Duration</p>
-                      <p className="font-semibold">
-                        {work.startDate &&
-                          new Date(work.startDate).toLocaleDateString()}{" "}
-                        -
-                        {work.endDate
-                          ? new Date(work.endDate).toLocaleDateString()
-                          : "Present"}
-                      </p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-gray-600">Responsibilities</p>
-                      <p className="font-semibold">{work.responsibilities}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Professional Interests */}
-        {candidate.professionalInterests && (
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-              Professional Interests
-            </h2>
-            <div className="space-y-4">
-              {candidate.professionalInterests.whyJoinTeam && (
-                <div>
-                  <p className="text-sm text-gray-600">Why Join Our Team</p>
-                  <p className="font-semibold">
-                    {candidate.professionalInterests.whyJoinTeam}
-                  </p>
-                </div>
-              )}
-              {candidate.professionalInterests.longTermGoals && (
-                <div>
-                  <p className="text-sm text-gray-600">Long-term Goals</p>
-                  <p className="font-semibold">
-                    {candidate.professionalInterests.longTermGoals}
-                  </p>
-                </div>
-              )}
-              {candidate.professionalInterests.availabilityToJoin && (
-                <div>
-                  <p className="text-sm text-gray-600">Availability</p>
-                  <p className="font-semibold">
-                    {candidate.professionalInterests.availabilityToJoin}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Render the appropriate detail component */}
+        {isExitedCandidate ? (
+          <ExitedCandidateDetail candidate={candidate} />
+        ) : (
+          <InterestedCandidateDetail candidate={candidate} />
         )}
       </div>
 
-      {/* Approve Modal */}
+      {/* Approve Modal (same as before) */}
       {showApproveModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
               Approve Candidate
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Designation <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -479,12 +242,12 @@ const CandidateDetail = () => {
                       designation: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   placeholder="e.g., Junior Accountant"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Date of Joining <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -497,21 +260,21 @@ const CandidateDetail = () => {
                       dateOfJoining: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 />
               </div>
             </div>
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowApproveModal(false)}
-                className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleApprove}
                 disabled={actionLoading}
-                className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium disabled:opacity-50"
               >
                 {actionLoading ? "Approving..." : "Approve"}
               </button>

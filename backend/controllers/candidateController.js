@@ -131,12 +131,12 @@ exports.checkCandidate = async (req, res) => {
     }
 
     const query = {};
-    if (email) query["contactInfo.email"] = email;
+    if (email) query["personalInfo.email"] = email;
     if (mobile) query["personalInfo.primaryContact.number"] = mobile;
 
     const candidate = await Candidate.findOne({
       $or: [
-        { "contactInfo.email": email },
+        { "personalInfo.email": email },
         { "personalInfo.primaryContact.number": mobile },
       ],
       status: { $in: ["INTERESTED", "ALLOWED_EXITED"] },
@@ -231,7 +231,7 @@ exports.submitExitedForm = async (req, res) => {
       await candidate.save();
     } else {
       // Create new candidate directly from Exited form
-      if (!personalInfo || !contactInfo?.email) {
+      if (!personalInfo || !contactInfo) {
         return res.status(400).json({
           success: false,
           message: "Please provide required information",

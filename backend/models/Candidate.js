@@ -18,6 +18,17 @@ const candidateSchema = new mongoose.Schema(
       lastName: { type: String, trim: true },
       dateOfBirth: { type: Date },
       gender: { type: String, enum: ["Male", "Female", "Other", ""] },
+      email: {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
+        trim: true,
+        match: [
+          /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+          "Please add a valid email",
+        ],
+      },
       primaryContact: {
         countryCode: { type: String, default: "+91" },
         number: { type: String, unique: true, sparse: true },
@@ -46,7 +57,6 @@ const candidateSchema = new mongoose.Schema(
     interestInfo: {
       whyJoin: String,
       careerGoals: String,
-      availability: String,
       sourceOfAwareness: String,
     },
 
@@ -70,13 +80,13 @@ const candidateSchema = new mongoose.Schema(
     },
 
     contactInfo: {
-      email: {
-        type: String,
-        unique: true,
-        sparse: true,
-        lowercase: true,
-        trim: true,
-      },
+      // email: {
+      //   type: String,
+      //   unique: true,
+      //   sparse: true,
+      //   lowercase: true,
+      //   trim: true,
+      // },
       alternateMobile: String,
       permanentAddress: {
         address: String,

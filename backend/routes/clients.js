@@ -1,0 +1,43 @@
+// routes/clients.js
+
+const express = require("express");
+const router = express.Router();
+const clientCtrl = require("../controllers/clientController");
+const { protect, authorize } = require("../middleware/auth");
+
+/*
+  CLIENT ROUTES
+  Access Control:
+  - Only Admin can create, update, delete
+  - Admin + Assigned Employee can view
+*/
+
+// Create Client (Admin Only)
+router.post("/", protect, authorize("admin"), clientCtrl.createClient);
+
+// Get All Clients (Admin)
+router.get("/", protect, authorize("admin"), clientCtrl.getClients);
+
+// Get Single Client
+router.get(
+  "/:id",
+  protect,
+  authorize("admin", "employee"),
+  clientCtrl.getClient,
+);
+
+// Update Client (Admin Only)
+router.put("/:id", protect, authorize("admin"), clientCtrl.updateClient);
+
+// Delete Client (Admin Only)
+router.delete("/:id", protect, authorize("admin"), clientCtrl.deleteClient);
+
+// Assign Accountant / Employee (Admin Only)
+router.put(
+  "/:clientId/assign",
+  protect,
+  authorize("admin"),
+  clientCtrl.assignAccountant,
+);
+
+module.exports = router;
