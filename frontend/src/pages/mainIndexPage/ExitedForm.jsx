@@ -1558,7 +1558,7 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
-import { candidateAPI } from "../services/api";
+import { candidateAPI } from "../../services/api";
 
 /*
   NOTE:
@@ -3007,7 +3007,11 @@ const ExitedForm = () => {
                 value={formData.professionalInterests.whyJoinTeam} // ✅ changed
                 onChange={
                   (e) =>
-                    handleChange("professionalInterests", "whyJoinTeam", e.target.value) // ✅ changed
+                    handleChange(
+                      "professionalInterests",
+                      "whyJoinTeam",
+                      e.target.value,
+                    ) // ✅ changed
                 }
                 disabled={existingCandidate}
                 className={`w-full px-4 py-3 border rounded-md ${existingCandidate ? "bg-gray-100" : "bg-white"}`}

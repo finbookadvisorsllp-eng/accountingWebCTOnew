@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { FaUser, FaLock, FaCalculator } from 'react-icons/fa';
-import useAuthStore from '../store/authStore';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { FaUser, FaLock, FaCalculator } from "react-icons/fa";
+import useAuthStore from "../../store/authStore";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, employeeLogin, loading } = useAuthStore();
-  
-  const [loginType, setLoginType] = useState('admin' ); // admin, advisor, client, employee
+
+  const [loginType, setLoginType] = useState("admin"); // admin, advisor, client, employee
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    employeeId: ''
+    email: "",
+    password: "",
+    employeeId: "",
   });
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -26,29 +26,29 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      if (loginType === 'employee') {
+      if (loginType === "employee") {
         await employeeLogin({
           employeeId: formData.employeeId,
-          password: formData.password
+          password: formData.password,
         });
-        toast.success('Login successful!');
-        navigate('/employee/dashboard');
+        toast.success("Login successful!");
+        navigate("/employee/dashboard");
       } else {
         await login({
           email: formData.email,
           password: formData.password,
-          role: loginType
+          role: loginType,
         });
-        toast.success('Login successful!');
-        
-        if (loginType === 'admin' || loginType === 'advisor') {
-          navigate('/admin/dashboard');
+        toast.success("Login successful!");
+
+        if (loginType === "admin" || loginType === "advisor") {
+          navigate("/admin/dashboard");
         } else {
-          navigate('/');
+          navigate("/");
         }
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      toast.error(error.response?.data?.message || "Login failed");
     }
   };
 
@@ -57,11 +57,16 @@ const Login = () => {
       <div className="max-w-md w-full">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <Link to="/" className="flex items-center justify-center space-x-2 mb-4">
+          <Link
+            to="/"
+            className="flex items-center justify-center space-x-2 mb-4"
+          >
             <FaCalculator className="text-4xl text-primary-600" />
             <span className="text-3xl font-bold text-gray-800">AccounTech</span>
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome Back
+          </h2>
           <p className="text-gray-600">Sign in to your account</p>
         </div>
 
@@ -69,14 +74,14 @@ const Login = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Role Selector */}
           <div className="grid grid-cols-4 gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
-            {['admin', 'advisor', 'client', 'employee'].map((type) => (
+            {["admin", "advisor", "client", "employee"].map((type) => (
               <button
                 key={type}
                 onClick={() => setLoginType(type)}
                 className={`py-2 px-3 rounded-md text-sm font-semibold transition ${
                   loginType === type
-                    ? 'bg-primary-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? "bg-primary-600 text-white shadow-md"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -86,7 +91,7 @@ const Login = () => {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {loginType === 'employee' ? (
+            {loginType === "employee" ? (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Employee ID
@@ -153,15 +158,18 @@ const Login = () => {
               disabled={loading}
               className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 transition font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
           {/* Additional Links */}
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/get-started" className="text-primary-600 font-semibold hover:text-primary-700">
+              Don't have an account?{" "}
+              <Link
+                to="/get-started"
+                className="text-primary-600 font-semibold hover:text-primary-700"
+              >
                 Get Started
               </Link>
             </p>

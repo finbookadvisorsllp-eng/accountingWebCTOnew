@@ -132,9 +132,9 @@ const CandidatesList = () => {
                 <th className="border border-gray-300 px-3 py-2 font-bold">
                   Status
                 </th>
-                <th className="border border-gray-300 px-3 py-2 font-bold">
+                {/* <th className="border border-gray-300 px-3 py-2 font-bold">
                   Profile
-                </th>
+                </th> */}
                 <th className="border border-gray-300 px-3 py-2 font-bold">
                   Applied
                 </th>
@@ -206,7 +206,7 @@ const CandidatesList = () => {
                       </span>
                     </td>
 
-                    <td className="border border-gray-300 px-3 py-2.5">
+                    {/* <td className="border border-gray-300 px-3 py-2.5">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 rounded h-1.5 overflow-hidden">
                           <div
@@ -220,7 +220,7 @@ const CandidatesList = () => {
                           {candidate.profilePercentage}%
                         </span>
                       </div>
-                    </td>
+                    </td> */}
 
                     <td className="border border-gray-300 px-3 py-2.5 text-xs text-gray-500">
                       {new Date(candidate.createdAt).toLocaleDateString()}
