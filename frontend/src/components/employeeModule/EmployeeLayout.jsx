@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import ContractAcceptanceWall from './ContractAcceptanceWall';
 
 const EmployeeLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [contractAccepted, setContractAccepted] = useState(true); // default true to avoid flash
   const location = useLocation();
+
+  useEffect(() => {
+    // Check contract acceptance status from localStorage
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user.role === "employee") {
+      setContractAccepted(user.contractAccepted === true);
+    }
+  }, []);
 
   // Determine current active view for the sidebar highlight
   let currentView = 'dashboard';
@@ -23,6 +33,19 @@ const EmployeeLayout = () => {
     currentView = 'communication';
   }
 
+  // Get user ID for contract acceptance
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // ─── Contract Gate ───
+  if (user.role === "employee" && !contractAccepted) {
+    return (
+      <ContractAcceptanceWall
+        userId={user._id}
+        onAccepted={() => setContractAccepted(true)}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen w-full bg-[#F3F4F6] overflow-hidden relative">
       {/* Mobile Sidebar Overlay */}
@@ -38,7 +61,7 @@ const EmployeeLayout = () => {
         <Sidebar 
           className="w-72 h-full shrink-0 shadow-2xl md:shadow-lg border-r border-slate-200" 
           currentView={currentView}
-          onNavClick={() => setIsSidebarOpen(false)} // Close on mobile when link is clicked
+          onNavClick={() => setIsSidebarOpen(false)}
         />
       </div>
 

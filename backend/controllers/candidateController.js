@@ -65,7 +65,7 @@ exports.submitInterestForm = async (req, res) => {
     // 🔥 FormData se string aayega
     const formData = JSON.parse(req.body.formData);
 
-    const { personalInfo, education, workExperience, interestInfo, consent } =
+    const { personalInfo, detailedEducation, detailedWorkExperience, interestInfo, consent } =
       formData;
 
     if (
@@ -92,8 +92,8 @@ exports.submitInterestForm = async (req, res) => {
 
     const candidate = await Candidate.create({
       personalInfo,
-      education,
-      workExperience,
+      detailedEducation,
+      detailedWorkExperience,
       interestInfo,
       consent,
       documents: {
@@ -153,14 +153,7 @@ exports.checkCandidate = async (req, res) => {
     res.json({
       success: true,
       exists: true,
-      data: {
-        _id: candidate._id,
-        personalInfo: candidate.personalInfo,
-        education: candidate.education,
-        workExperience: candidate.workExperience,
-        interestInfo: candidate.interestInfo,
-        status: candidate.status,
-      },
+      data: candidate,
     });
   } catch (error) {
     res.status(500).json({
@@ -381,7 +374,7 @@ exports.allowExited = async (req, res) => {
   }
 };
 
-// @desc    Approve candidate and generate employee credentials
+// @desc    Approve candidate and generate employee credentials (Admin Onboard)
 // @route   POST /api/candidates/:id/approve
 // @access  Private (Admin)
 exports.approveCandidate = async (req, res) => {
@@ -398,37 +391,84 @@ exports.approveCandidate = async (req, res) => {
     if (candidate.status !== "EXITED") {
       return res.status(400).json({
         success: false,
-        message: "Candidate must be in EXITED status to approve",
+        message: "Candidate must be in EXITED status to onboard",
       });
     }
 
-    const { designation, dateOfJoining, adminData } = req.body;
+    // Parse JSON fields from multipart form-data
+    const safeJSON = (v) => { try { return typeof v === 'string' ? JSON.parse(v) : v; } catch { return v; } };
 
-    // Generate employee ID
-    const employeeId = await generateEmployeeId(Candidate);
+    const designation = req.body.designation;
+    const reportingAuthority = req.body.reportingAuthority;
+    const dateOfJoining = req.body.dateOfJoining;
+    const familyBackground = safeJSON(req.body.familyBackground);
+    const contactInfo = safeJSON(req.body.contactInfo);
+    const contractInfo = safeJSON(req.body.contractInfo);
+    const legalCompliance = safeJSON(req.body.legalCompliance);
 
-    // Generate temporary password
+    // ── Mandatory admin fields ──
+    if (!designation || !reportingAuthority) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Designation and Reporting Authority are mandatory",
+      });
+    }
+
+    // ── Generate prefix-based Employee ID ──
+    const employeeId = await generateEmployeeId(Candidate, designation);
+
+    // ── Generate temporary password ──
     const tempPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    // Update candidate with admin info
+    // ── Update adminInfo ──
     candidate.adminInfo = {
       employeeId,
       password: hashedPassword,
       designation,
-      dateOfJoining,
+      reportingAuthority,
+      dateOfJoining: dateOfJoining || new Date(),
       generatedBy: req.user._id,
       generatedAt: new Date(),
     };
 
-    if (adminData) {
-      candidate.employeeContactInfo =
-        adminData.employeeContactInfo || candidate.employeeContactInfo;
-      candidate.contractInfo = adminData.contractInfo || candidate.contractInfo;
-      candidate.legalCompliance =
-        adminData.legalCompliance || candidate.legalCompliance;
+    // ── Handle file uploads ──
+    if (req.files) {
+      if (!candidate.adminDocuments) candidate.adminDocuments = {};
+      if (req.files.passportPhoto) {
+        candidate.adminDocuments.passportPhoto = `/uploads/${req.files.passportPhoto[0].filename}`;
+      }
+      if (req.files.depositProof) {
+        candidate.adminDocuments.depositProof = `/uploads/${req.files.depositProof[0].filename}`;
+      }
     }
 
+    // ── Tab 1: Update fetched/editable fields ──
+    if (familyBackground) {
+      candidate.familyBackground = {
+        ...candidate.familyBackground?.toObject?.() || candidate.familyBackground || {},
+        ...familyBackground,
+      };
+    }
+    if (contactInfo) {
+      candidate.contactInfo = {
+        ...candidate.contactInfo?.toObject?.() || candidate.contactInfo || {},
+        ...contactInfo,
+      };
+    }
+
+    // ── Tab 2: Contract & Deposit ──
+    if (contractInfo) {
+      candidate.contractInfo = contractInfo;
+    }
+
+    // ── Tab 3: Legal Compliance ──
+    if (legalCompliance) {
+      candidate.legalCompliance = legalCompliance;
+    }
+
+    // ── Update status ──
     candidate.status = "APPROVED";
     candidate.profilePercentage = 80;
     candidate.lastModifiedBy = req.user._id;
@@ -437,7 +477,7 @@ exports.approveCandidate = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Candidate approved successfully",
+      message: "Candidate onboarded successfully",
       data: {
         candidate,
         credentials: {
@@ -454,7 +494,7 @@ exports.approveCandidate = async (req, res) => {
   }
 };
 
-// @desc    Update admin fields for approved candidate
+// @desc    Update admin fields for approved/active candidate
 // @route   PUT /api/candidates/:id/admin-update
 // @access  Private (Admin)
 exports.updateAdminFields = async (req, res) => {
@@ -468,35 +508,66 @@ exports.updateAdminFields = async (req, res) => {
       });
     }
 
-    if (candidate.status !== "APPROVED") {
+    if (!["APPROVED", "ACTIVE"].includes(candidate.status)) {
       return res.status(400).json({
         success: false,
-        message: "Only approved candidates can be updated by admin",
+        message: "Only approved or active candidates can be updated by admin",
       });
     }
 
-    const {
-      employeeContactInfo,
-      contractInfo,
-      legalCompliance,
-      designation,
-      dateOfJoining,
-    } = req.body;
+    // Parse JSON fields from multipart form-data
+    const safeJSON = (v) => { try { return typeof v === 'string' ? JSON.parse(v) : v; } catch { return v; } };
 
-    if (employeeContactInfo)
+    const designation = req.body.designation;
+    const reportingAuthority = req.body.reportingAuthority;
+    const dateOfJoining = req.body.dateOfJoining;
+    const employeeContactInfo = safeJSON(req.body.employeeContactInfo);
+    const contractInfo = safeJSON(req.body.contractInfo);
+    const legalCompliance = safeJSON(req.body.legalCompliance);
+    const familyBackground = safeJSON(req.body.familyBackground);
+    const contactInfo = safeJSON(req.body.contactInfo);
+
+    // Update adminInfo fields
+    if (designation) candidate.adminInfo.designation = designation;
+    if (reportingAuthority) candidate.adminInfo.reportingAuthority = reportingAuthority;
+    if (dateOfJoining) candidate.adminInfo.dateOfJoining = dateOfJoining;
+
+    // Update other sections
+    if (familyBackground) {
+      candidate.familyBackground = {
+        ...candidate.familyBackground?.toObject?.() || candidate.familyBackground || {},
+        ...familyBackground,
+      };
+    }
+    if (contactInfo) {
+      candidate.contactInfo = {
+        ...candidate.contactInfo?.toObject?.() || candidate.contactInfo || {},
+        ...contactInfo,
+      };
+    }
+    if (employeeContactInfo) {
       candidate.employeeContactInfo = {
-        ...candidate.employeeContactInfo,
+        ...candidate.employeeContactInfo?.toObject?.() || candidate.employeeContactInfo || {},
         ...employeeContactInfo,
       };
-    if (contractInfo)
-      candidate.contractInfo = { ...candidate.contractInfo, ...contractInfo };
-    if (legalCompliance)
-      candidate.legalCompliance = {
-        ...candidate.legalCompliance,
-        ...legalCompliance,
-      };
-    if (designation) candidate.adminInfo.designation = designation;
-    if (dateOfJoining) candidate.adminInfo.dateOfJoining = dateOfJoining;
+    }
+    if (contractInfo) {
+      candidate.contractInfo = { ...candidate.contractInfo?.toObject?.() || candidate.contractInfo || {}, ...contractInfo };
+    }
+    if (legalCompliance) {
+      candidate.legalCompliance = { ...candidate.legalCompliance?.toObject?.() || candidate.legalCompliance || {}, ...legalCompliance };
+    }
+
+    // Handle file uploads
+    if (req.files) {
+      if (!candidate.adminDocuments) candidate.adminDocuments = {};
+      if (req.files.passportPhoto) {
+        candidate.adminDocuments.passportPhoto = `/uploads/${req.files.passportPhoto[0].filename}`;
+      }
+      if (req.files.depositProof) {
+        candidate.adminDocuments.depositProof = `/uploads/${req.files.depositProof[0].filename}`;
+      }
+    }
 
     candidate.lastModifiedBy = req.user._id;
     await candidate.save();
@@ -504,52 +575,6 @@ exports.updateAdminFields = async (req, res) => {
     res.json({
       success: true,
       message: "Candidate updated successfully",
-      data: candidate,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// @desc    Employee final confirmation
-// @route   PUT /api/candidates/:id/final-confirmation
-// @access  Private (Employee)
-exports.finalConfirmation = async (req, res) => {
-  try {
-    const candidate = await Candidate.findById(req.params.id);
-
-    if (!candidate) {
-      return res.status(404).json({
-        success: false,
-        message: "Candidate not found",
-      });
-    }
-
-    if (candidate.status !== "APPROVED") {
-      return res.status(400).json({
-        success: false,
-        message: "Profile not approved yet",
-      });
-    }
-
-    candidate.finalConfirmation = {
-      reviewCompleted: true,
-      accuracyConfirmed: req.body.accuracyConfirmed || true,
-      finalDigitalConfirmation: req.body.finalDigitalConfirmation || true,
-      confirmedAt: new Date(),
-    };
-
-    candidate.status = "ACTIVE";
-    candidate.profilePercentage = 100;
-
-    await candidate.save();
-
-    res.json({
-      success: true,
-      message: "Profile activated successfully",
       data: candidate,
     });
   } catch (error) {
@@ -624,3 +649,188 @@ exports.deleteCandidate = async (req, res) => {
     });
   }
 };
+
+// @desc    Employee accepts contract terms (gate unlock)
+// @route   PUT /api/candidates/:id/accept-contract
+// @access  Private (Employee)
+exports.acceptContract = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found",
+      });
+    }
+
+    if (!["APPROVED", "ACTIVE"].includes(candidate.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Only approved employees can accept the contract",
+      });
+    }
+
+    candidate.employeeContractAcceptance = {
+      allTermsAccepted: true,
+      acceptedAt: new Date(),
+      digitalSignature: true,
+    };
+
+    // Activate the employee immediately upon contract acceptance
+    if (candidate.status === "APPROVED") {
+      candidate.status = "ACTIVE";
+    }
+
+    await candidate.save();
+
+    res.json({
+      success: true,
+      message: "Contract accepted successfully",
+      data: candidate.employeeContractAcceptance,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Employee updates their own profile (editable fields only)
+// @route   PUT /api/candidates/:id/update-profile
+// @access  Private (Employee)
+exports.updateOwnProfile = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found",
+      });
+    }
+
+    if (!["APPROVED", "ACTIVE"].includes(candidate.status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Only approved employees can update their profile",
+      });
+    }
+
+    let familyBackground, contactInfo, legalCompliance, exitedPersonalInfo;
+
+    try {
+      familyBackground = req.body.familyBackground ? JSON.parse(req.body.familyBackground) : {};
+      contactInfo = req.body.contactInfo ? JSON.parse(req.body.contactInfo) : {};
+      legalCompliance = req.body.legalCompliance ? JSON.parse(req.body.legalCompliance) : {};
+      exitedPersonalInfo = req.body.exitedPersonalInfo ? JSON.parse(req.body.exitedPersonalInfo) : {};
+    } catch {
+      // Fallback for raw JSON if not sent as multipart stringified
+      familyBackground = req.body.familyBackground || {};
+      contactInfo = req.body.contactInfo || {};
+      legalCompliance = req.body.legalCompliance || {};
+      exitedPersonalInfo = req.body.exitedPersonalInfo || {};
+    }
+
+    // Handle Profile Avatar upload
+    if (req.file) {
+      candidate.profileAvatar = `/uploads/${req.file.filename}`;
+    }
+
+    // Employee-editable fields only (NOT admin fields)
+    if (Object.keys(familyBackground).length > 0) {
+      candidate.familyBackground = {
+        ...candidate.familyBackground?.toObject?.() || candidate.familyBackground || {},
+        ...familyBackground,
+      };
+    }
+    if (Object.keys(contactInfo).length > 0) {
+      candidate.contactInfo = {
+        ...candidate.contactInfo?.toObject?.() || candidate.contactInfo || {},
+        ...contactInfo,
+      };
+    }
+    if (Object.keys(legalCompliance).length > 0) {
+      // Merge at nested level to prevent overwriting admin-set values
+      const existing = candidate.legalCompliance?.toObject?.() || candidate.legalCompliance || {};
+      candidate.legalCompliance = {
+        ...existing,
+        aadharNumber: legalCompliance.aadharNumber || existing.aadharNumber,
+        panNumber: legalCompliance.panNumber || existing.panNumber,
+        bankDetails: {
+          ...existing.bankDetails,
+          ...(legalCompliance.bankDetails || {}),
+        },
+        emergencyContact: {
+          ...existing.emergencyContact,
+          ...(legalCompliance.emergencyContact || {}),
+        },
+        criminalRecordDeclaration: existing.criminalRecordDeclaration,
+      };
+    }
+    if (Object.keys(exitedPersonalInfo).length > 0) {
+      candidate.exitedPersonalInfo = {
+        ...candidate.exitedPersonalInfo?.toObject?.() || candidate.exitedPersonalInfo || {},
+        ...exitedPersonalInfo,
+      };
+    }
+
+    // Recalculate profile percentage
+    candidate.profilePercentage = calculateProfilePercentage(candidate);
+
+    await candidate.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: candidate,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Employee changes their password
+// @route   PUT /api/candidates/:id/change-password
+// @access  Private (Employee)
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    // We need to explicitly select password if it was excluded by default (though it isn't currently)
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res.status(404).json({ success: false, message: "Candidate not found" });
+    }
+
+    if (!candidate.adminInfo || !candidate.adminInfo.password) {
+       return res.status(400).json({ success: false, message: "No password set for this account" });
+    }
+
+    const bcrypt = require("bcryptjs");
+    const isMatch = await bcrypt.compare(currentPassword, candidate.adminInfo.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Incorrect current password" });
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    candidate.adminInfo.password = await bcrypt.hash(newPassword, salt);
+
+    await candidate.save();
+
+    res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

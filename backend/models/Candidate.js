@@ -11,6 +11,9 @@ const candidateSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    profileAvatar: {
+      type: String,
+    },
 
     // INTEREST FORM FIELDS (20% Profile)
     personalInfo: {
@@ -41,18 +44,6 @@ const candidateSchema = new mongoose.Schema(
       },
     },
 
-    education: {
-      highestQualification: String,
-      yearOfPassing: Number,
-      certifications: [String],
-    },
-
-    workExperience: {
-      jobTitle: String,
-      companyName: String,
-      yearsOfExperience: Number,
-      responsibilities: String,
-    },
 
     interestInfo: {
       whyJoin: String,
@@ -99,6 +90,9 @@ const candidateSchema = new mongoose.Schema(
 
     familyBackground: {
       fatherOrSpouseName: String,
+      fatherSpouseFirstName: String,
+      fatherSpouseLastName: String,
+      fatherSpouseContact: String,
       occupation: String,
       numberOfChildren: Number,
       numberOfSiblings: Number,
@@ -127,7 +121,6 @@ const candidateSchema = new mongoose.Schema(
         endDate: Date,
         responsibilities: String,
         reasonForLeaving: String,
-        skills: [String],
       },
     ],
 
@@ -165,9 +158,15 @@ const candidateSchema = new mongoose.Schema(
       employeeId: { type: String, unique: true, sparse: true },
       password: String,
       designation: String,
+      reportingAuthority: String, // Employee ID of the reporting senior
       dateOfJoining: Date,
       generatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       generatedAt: Date,
+    },
+
+    adminDocuments: {
+      passportPhoto: String,
+      depositProof: String,
     },
 
     employeeContactInfo: {
@@ -184,11 +183,19 @@ const candidateSchema = new mongoose.Schema(
     },
 
     contractInfo: {
+      // Contract point acceptances
+      workHoursAccepted: { type: Boolean, default: false },
+      responsibilitiesAccepted: { type: Boolean, default: false },
+      termsOfEmploymentAccepted: { type: Boolean, default: false },
+      ndaAccepted: { type: Boolean, default: false },
+      salaryTermsAccepted: { type: Boolean, default: false },
+      terminationClauseAccepted: { type: Boolean, default: false },
+      legalComplianceAccepted: { type: Boolean, default: false },
+      otherTermsAccepted: { type: Boolean, default: false },
       contractAcceptedHindi: { type: Boolean, default: false },
       contractAcceptedEnglish: { type: Boolean, default: false },
-      digitalSignature: String,
+      digitalSignature: { type: Boolean, default: false },
       depositAmount: Number,
-      depositProof: String,
       depositConfirmed: { type: Boolean, default: false },
     },
 
@@ -196,6 +203,7 @@ const candidateSchema = new mongoose.Schema(
       aadharNumber: String,
       panNumber: String,
       bankDetails: {
+        accountHolderName: String,
         accountNumber: String,
         ifscCode: String,
         bankName: String,
@@ -205,16 +213,17 @@ const candidateSchema = new mongoose.Schema(
         name: String,
         relationship: String,
         contact: String,
+        email: String,
       },
       criminalRecordDeclaration: { type: Boolean, default: false },
+      criminalRecordDetails: String,
     },
 
-    // EMPLOYEE FINAL CONFIRMATION (100% Profile)
-    finalConfirmation: {
-      reviewCompleted: { type: Boolean, default: false },
-      accuracyConfirmed: { type: Boolean, default: false },
-      finalDigitalConfirmation: { type: Boolean, default: false },
-      confirmedAt: Date,
+    // EMPLOYEE CONTRACT ACCEPTANCE (gate before app access)
+    employeeContractAcceptance: {
+      allTermsAccepted: { type: Boolean, default: false },
+      acceptedAt: Date,
+      digitalSignature: { type: Boolean, default: false },
     },
 
     // Metadata

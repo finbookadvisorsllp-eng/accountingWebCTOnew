@@ -61,13 +61,24 @@ export const candidateAPI = {
   getCandidates: (params) => api.get("/candidates", { params }),
   getCandidate: (id) => api.get(`/candidates/${id}`),
   allowExited: (id) => api.put(`/candidates/${id}/allow-exited`),
-  approveCandidate: (id, data) => api.post(`/candidates/${id}/approve`, data),
+  approveCandidate: (id, data) =>
+    api.post(`/candidates/${id}/approve`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   updateAdminFields: (id, data) =>
-    api.put(`/candidates/${id}/admin-update`, data),
-  finalConfirmation: (id, data) =>
-    api.put(`/candidates/${id}/final-confirmation`, data),
+    api.put(`/candidates/${id}/admin-update`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   getStats: () => api.get("/candidates/stats"),
   deleteCandidate: (id) => api.delete(`/candidates/${id}`),
+  // Employee self-service
+  acceptContract: (id) => api.put(`/candidates/${id}/accept-contract`),
+  updateOwnProfile: (id, data) =>
+    api.put(`/candidates/${id}/update-profile`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  changePassword: (id, data) =>
+    api.put(`/candidates/${id}/change-password`, data),
 };
 
 // Upload endpoints

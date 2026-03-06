@@ -16,7 +16,6 @@ const InterestForm = () => {
   const sourceOptions = ["Social Media", "Referral", "Website", "University"];
   const [isOtherSource, setIsOtherSource] = useState(false);
   const [customSource, setCustomSource] = useState("");
-  const [newCert, setNewCert] = useState("");
 
   // State & City
   const [states, setStates] = useState([]);
@@ -42,17 +41,26 @@ const InterestForm = () => {
         pin: "",
       },
     },
-    education: {
-      highestQualification: "",
-      yearOfPassing: "",
-      certifications: [],
-    },
-    workExperience: {
-      jobTitle: "",
-      companyName: "",
-      yearsOfExperience: "",
-      responsibilities: "",
-    },
+    detailedEducation: [
+      {
+        level: "",
+        degree: "",
+        institution: "",
+        yearOfPassing: "",
+        percentage: "",
+        achievements: "",
+      },
+    ],
+    detailedWorkExperience: [
+      {
+        employerName: "",
+        jobTitle: "",
+        startDate: "",
+        endDate: "",
+        responsibilities: "",
+        reasonForLeaving: "",
+      },
+    ],
     interestInfo: {
       whyJoin: "",
       careerGoals: "",
@@ -91,25 +99,50 @@ const InterestForm = () => {
     [],
   );
 
-  // Certifications helpers
-  const handleAddCert = () => {
-    if (newCert.trim()) {
-      const updated = [...formData.education.certifications, newCert.trim()];
-      handleChange("education", "certifications", updated);
-      setNewCert("");
-    }
-  };
-
-  const handleCertificationRemove = (index) => {
+  // Array helpers for detailedEducation & detailedWorkExperience
+  const handleArrayUpdate = useCallback((section, index, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      education: {
-        ...prev.education,
-        certifications: prev.education.certifications.filter(
-          (_, i) => i !== index,
-        ),
-      },
+      [section]: prev[section].map((item, i) =>
+        i === index ? { ...item, [field]: value } : item,
+      ),
     }));
+  }, []);
+
+  const handleArrayAdd = useCallback((section, item) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: [...prev[section], item],
+    }));
+  }, []);
+
+  const handleArrayRemove = useCallback((section, index) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: prev[section].filter((_, i) => i !== index),
+    }));
+  }, []);
+
+  const addEducation = () => {
+    handleArrayAdd("detailedEducation", {
+      level: "",
+      degree: "",
+      institution: "",
+      yearOfPassing: "",
+      percentage: "",
+      achievements: "",
+    });
+  };
+
+  const addWorkExperience = () => {
+    handleArrayAdd("detailedWorkExperience", {
+      employerName: "",
+      jobTitle: "",
+      startDate: "",
+      endDate: "",
+      responsibilities: "",
+      reasonForLeaving: "",
+    });
   };
 
   // Date of Birth – stable reference to avoid infinite loops
@@ -495,173 +528,195 @@ const InterestForm = () => {
 
             {/* Educational Background */}
             <section className="space-y-4">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2">
-                Educational Background
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Highest Qualification
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.education.highestQualification}
-                    onChange={(e) =>
-                      handleChange(
-                        "education",
-                        "highestQualification",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
-                    placeholder="e.g., Bachelor's in Commerce"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Year of Passing
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.education.yearOfPassing}
-                    onChange={(e) =>
-                      handleChange("education", "yearOfPassing", e.target.value)
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition"
-                    placeholder="e.g., 2020"
-                  />
-                </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+                  Educational Background
+                </h2>
+                <button
+                  type="button"
+                  onClick={addEducation}
+                  className="px-3 py-1.5 text-xs bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium"
+                >
+                  + Add Education
+                </button>
               </div>
 
-              {/* Certifications */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Relevant Certifications (Optional)
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={newCert}
-                    onChange={(e) => setNewCert(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddCert();
-                      }
-                    }}
-                    placeholder="Enter certification name"
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddCert}
-                    className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium"
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.education.certifications.map((cert, index) => (
-                    <div
-                      key={index}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 text-primary-800 rounded-full text-xs"
-                    >
-                      <span>{cert}</span>
+              {formData.detailedEducation.map((edu, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3 relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-700">Education {index + 1}</span>
+                    {formData.detailedEducation.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => handleCertificationRemove(index)}
-                        className="ml-1 text-primary-600 hover:text-primary-800 font-bold"
-                        title="Remove"
+                        onClick={() => handleArrayRemove("detailedEducation", index)}
+                        className="text-xs text-red-500 hover:text-red-700 font-medium"
                       >
-                        ×
+                        Remove
                       </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Level</label>
+                      <select
+                        value={edu.level}
+                        onChange={(e) => handleArrayUpdate("detailedEducation", index, "level", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                      >
+                        <option value="">Select level</option>
+                        <option value="10th">10th</option>
+                        <option value="12th">12th</option>
+                        <option value="Graduation">Graduation</option>
+                        <option value="Post-Graduation">Post-Graduation</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
-                  ))}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Degree / Certification</label>
+                      <input
+                        type="text"
+                        value={edu.degree}
+                        onChange={(e) => handleArrayUpdate("detailedEducation", index, "degree", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                        placeholder="e.g., B.Com, B.Tech"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Institution</label>
+                      <input
+                        type="text"
+                        value={edu.institution}
+                        onChange={(e) => handleArrayUpdate("detailedEducation", index, "institution", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                        placeholder="School / University name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Year of Passing</label>
+                      <input
+                        type="number"
+                        value={edu.yearOfPassing}
+                        onChange={(e) => handleArrayUpdate("detailedEducation", index, "yearOfPassing", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                        placeholder="e.g., 2020"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Percentage / CGPA</label>
+                      <input
+                        type="number"
+                        value={edu.percentage}
+                        onChange={(e) => handleArrayUpdate("detailedEducation", index, "percentage", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                        placeholder="e.g., 85"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Achievements</label>
+                      <input
+                        type="text"
+                        value={edu.achievements}
+                        onChange={(e) => handleArrayUpdate("detailedEducation", index, "achievements", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                        placeholder="Any awards or achievements"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </section>
 
             {/* Work Experience */}
             <section className="space-y-4">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900 border-b pb-2">
-                Work Experience (Optional)
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Current/Most Recent Job Title
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.workExperience.jobTitle}
-                    onChange={(e) =>
-                      handleChange("workExperience", "jobTitle", e.target.value)
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
-                    placeholder="e.g., Junior Accountant"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.workExperience.companyName}
-                    onChange={(e) =>
-                      handleChange(
-                        "workExperience",
-                        "companyName",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
-                    placeholder="Company name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Years of Experience
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.workExperience.yearsOfExperience}
-                    onChange={(e) =>
-                      handleChange(
-                        "workExperience",
-                        "yearsOfExperience",
-                        e.target.value,
-                      )
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
-                    placeholder="e.g., 2"
-                  />
-                </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+                  Work Experience (Optional)
+                </h2>
+                <button
+                  type="button"
+                  onClick={addWorkExperience}
+                  className="px-3 py-1.5 text-xs bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium"
+                >
+                  + Add Experience
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Key Responsibilities
-                </label>
-                <textarea
-                  value={formData.workExperience.responsibilities}
-                  onChange={(e) =>
-                    handleChange(
-                      "workExperience",
-                      "responsibilities",
-                      e.target.value,
-                    )
-                  }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
-                  rows="3"
-                  placeholder="Describe your key responsibilities..."
-                />
-              </div>
+              {formData.detailedWorkExperience.map((work, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3 relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-700">Experience {index + 1}</span>
+                    {formData.detailedWorkExperience.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleArrayRemove("detailedWorkExperience", index)}
+                        className="text-xs text-red-500 hover:text-red-700 font-medium"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Employer / Company Name</label>
+                      <input
+                        type="text"
+                        value={work.employerName}
+                        onChange={(e) => handleArrayUpdate("detailedWorkExperience", index, "employerName", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                        placeholder="Company name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Job Title</label>
+                      <input
+                        type="text"
+                        value={work.jobTitle}
+                        onChange={(e) => handleArrayUpdate("detailedWorkExperience", index, "jobTitle", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                        placeholder="e.g., Junior Accountant"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                      <input
+                        type="date"
+                        value={work.startDate}
+                        onChange={(e) => handleArrayUpdate("detailedWorkExperience", index, "startDate", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                      <input
+                        type="date"
+                        value={work.endDate}
+                        onChange={(e) => handleArrayUpdate("detailedWorkExperience", index, "endDate", e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Key Responsibilities</label>
+                    <textarea
+                      value={work.responsibilities}
+                      onChange={(e) => handleArrayUpdate("detailedWorkExperience", index, "responsibilities", e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                      rows="2"
+                      placeholder="Describe your key responsibilities..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Reason for Leaving</label>
+                    <input
+                      type="text"
+                      value={work.reasonForLeaving}
+                      onChange={(e) => handleArrayUpdate("detailedWorkExperience", index, "reasonForLeaving", e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 transition"
+                      placeholder="e.g., Career growth"
+                    />
+                  </div>
+                </div>
+              ))}
             </section>
 
             {/* Interest & Availability */}

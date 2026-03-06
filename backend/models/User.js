@@ -86,10 +86,16 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "advisor", "client"],
-      default: "advisor",
+      enum: ["admin", "employee", "client"],
+      default: "employee",
     },
     employeeId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+    clientId: {
       type: String,
       unique: true,
       sparse: true,

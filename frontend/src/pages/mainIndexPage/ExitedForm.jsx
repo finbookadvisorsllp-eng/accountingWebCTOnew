@@ -1560,13 +1560,6 @@ import {
 } from "react-icons/fa";
 import { candidateAPI } from "../../services/api";
 
-/*
-  NOTE:
-  - I preserved your original functions and state logic.
-  - I replaced direct toast.* calls with notify.* wrapper for consistent production options.
-  - I added file handling, previews, and a mobile sidebar drawer to make the UI "real project" level.
-*/
-
 const ExitedForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -1579,6 +1572,57 @@ const ExitedForm = () => {
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // --- tag-input states ---
+  const [languageInput, setLanguageInput] = useState("");
+  const [workAreaInput, setWorkAreaInput] = useState("");
+
+  // --- Indian States & Cities data ---
+  const INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+    "Uttar Pradesh", "Uttarakhand", "West Bengal",
+    "Delhi", "Chandigarh", "Jammu & Kashmir", "Ladakh", "Puducherry",
+  ];
+
+  const STATE_CITIES = {
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati", "Kakinada", "Rajahmundry", "Kurnool", "Anantapur"],
+    "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Tawang", "Pasighat"],
+    "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon", "Tezpur"],
+    "Bihar": ["Patna", "Gaya", "Muzaffarpur", "Bhagalpur", "Darbhanga", "Purnia", "Ara"],
+    "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba", "Durg", "Rajnandgaon"],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Junagadh", "Gandhinagar"],
+    "Haryana": ["Gurugram", "Faridabad", "Panipat", "Ambala", "Karnal", "Hisar", "Rohtak", "Sonipat"],
+    "Himachal Pradesh": ["Shimla", "Manali", "Dharamshala", "Mandi", "Solan", "Kullu"],
+    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Hazaribagh", "Deoghar"],
+    "Karnataka": ["Bengaluru", "Mysuru", "Mangaluru", "Hubli", "Belgaum", "Dharwad", "Gulbarga"],
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Kannur", "Alappuzha"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain", "Sagar", "Rewa"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur", "Kolhapur", "Navi Mumbai"],
+    "Manipur": ["Imphal", "Thoubal", "Bishnupur"],
+    "Meghalaya": ["Shillong", "Tura", "Jowai"],
+    "Mizoram": ["Aizawl", "Lunglei", "Champhai"],
+    "Nagaland": ["Kohima", "Dimapur", "Mokokchung"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur", "Puri"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Bikaner", "Alwar", "Bharatpur"],
+    "Sikkim": ["Gangtok", "Namchi", "Pelling"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Erode", "Vellore"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Secunderabad"],
+    "Tripura": ["Agartala", "Udaipur", "Dharmanagar"],
+    "Uttar Pradesh": ["Lucknow", "Noida", "Varanasi", "Kanpur", "Agra", "Prayagraj", "Meerut", "Ghaziabad", "Greater Noida"],
+    "Uttarakhand": ["Dehradun", "Haridwar", "Rishikesh", "Nainital", "Haldwani", "Roorkee"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Siliguri", "Asansol", "Darjeeling"],
+    "Delhi": ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi", "Central Delhi", "Dwarka", "Rohini"],
+    "Chandigarh": ["Chandigarh"],
+    "Jammu & Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
+    "Ladakh": ["Leh", "Kargil"],
+    "Puducherry": ["Puducherry", "Karaikal"],
+  };
 
   const tabs = [
     "Personal Info",
@@ -1627,7 +1671,17 @@ const ExitedForm = () => {
       familyIncome: "",
     },
     detailedEducation: [],
-    detailedWorkExperience: [],
+    detailedWorkExperience: [
+      {
+        employerName: "",
+        jobTitle: "",
+        startDate: "",
+        endDate: "",
+        responsibilities: "",
+        reasonForLeaving: "",
+        // skills: [],
+      },
+    ],
     professionalInterests: {
       whyJoinTeam: "",
       longTermGoals: "",
@@ -1661,6 +1715,59 @@ const ExitedForm = () => {
   const [openWorkIndexes, setOpenWorkIndexes] = useState(new Set());
   // Education UI state (paste with other UI states)
   const [openEducationIndexes, setOpenEducationIndexes] = useState(new Set());
+
+  // --- Auto-add first entry for Education, Work Experience, and Reference on mount ---
+  const [autoInitDone, setAutoInitDone] = useState(false);
+  useEffect(() => {
+    if (autoInitDone) return;
+    setAutoInitDone(true);
+
+    // Auto-add first education entry if empty
+    if (formData.detailedEducation.length === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        detailedEducation: [{
+          level: "10th",
+          degree: "",
+          institution: "",
+          yearOfPassing: "",
+          percentage: "",
+          achievements: "",
+        }],
+      }));
+      setOpenEducationIndexes(new Set([0]));
+    }
+
+    // Auto-add first work experience entry if empty
+    if (formData.detailedWorkExperience.length === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        detailedWorkExperience: [{
+          employerName: "",
+          jobTitle: "",
+          startDate: "",
+          endDate: "",
+          responsibilities: "",
+          reasonForLeaving: "",
+          // skills: [],
+        }],
+      }));
+      setOpenWorkIndexes(new Set([0]));
+    }
+
+    // Auto-add one reference if empty
+    if (formData.references.length === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        references: [{
+          name: "",
+          relationship: "",
+          contact: "",
+          email: "",
+        }],
+      }));
+    }
+  }, []);
 
   useEffect(() => {
     // revoke object URLs when component unmounts
@@ -1755,15 +1862,49 @@ const ExitedForm = () => {
         };
 
         setExistingCandidate(candidateData);
-        setFormData((prev) => ({
-          ...prev,
-          candidateId: candidateData._id,
-          personalInfo: formattedPersonalInfo, // ✅ fixed date format
-          education: candidateData.education || prev.education,
-          workExperience: candidateData.workExperience || prev.workExperience,
-          interestInfo: candidateData.interestInfo || prev.interestInfo,
-          consent: candidateData.consent || prev.consent,
-        }));
+
+        setFormData((prev) => {
+          // Both forms now use the same array fields, so merge is straightforward
+          const mergedEducation =
+            Array.isArray(candidateData.detailedEducation) && candidateData.detailedEducation.length
+              ? candidateData.detailedEducation
+              : prev.detailedEducation;
+
+          const mergedWork =
+            Array.isArray(candidateData.detailedWorkExperience) && candidateData.detailedWorkExperience.length
+              ? candidateData.detailedWorkExperience
+              : prev.detailedWorkExperience;
+
+          const mergedReferences =
+            Array.isArray(candidateData.references) && candidateData.references.length
+              ? candidateData.references
+              : prev.references;
+
+          return {
+            ...prev,
+            candidateId: candidateData._id,
+            personalInfo: formattedPersonalInfo,
+            exitedPersonalInfo: candidateData.exitedPersonalInfo || prev.exitedPersonalInfo,
+            contactInfo: candidateData.contactInfo || prev.contactInfo,
+            familyBackground: candidateData.familyBackground || prev.familyBackground,
+            detailedEducation: mergedEducation,
+            detailedWorkExperience: mergedWork,
+            professionalInterests: candidateData.professionalInterests || prev.professionalInterests,
+            references: mergedReferences,
+            exitedDocuments: candidateData.exitedDocuments || prev.exitedDocuments,
+            exitedConsent: candidateData.exitedConsent || prev.exitedConsent,
+            interestInfo: candidateData.interestInfo || prev.interestInfo,
+            consent: candidateData.consent || prev.consent,
+          };
+        });
+
+        // Open all fetched education and work experience accordion entries
+        if (Array.isArray(candidateData.detailedEducation) && candidateData.detailedEducation.length > 0) {
+          setOpenEducationIndexes(new Set(candidateData.detailedEducation.map((_, i) => i)));
+        }
+        if (Array.isArray(candidateData.detailedWorkExperience) && candidateData.detailedWorkExperience.length > 0) {
+          setOpenWorkIndexes(new Set(candidateData.detailedWorkExperience.map((_, i) => i)));
+        }
 
         notify.success("Existing data found and loaded!");
       } else {
@@ -1839,18 +1980,22 @@ const ExitedForm = () => {
   //     return updated;
   //   });
   // };
-  const addLanguage = () => {
-    const lang = prompt("Enter language name:");
-    if (lang) {
-      setFormData((prev) => ({
-        ...prev,
-        exitedPersonalInfo: {
-          ...prev.exitedPersonalInfo,
-          languagesKnown: [...prev.exitedPersonalInfo.languagesKnown, lang],
-        },
-      }));
-      notify.success(`Added language: ${lang}`);
+  const addLanguage = (lang) => {
+    const trimmed = (lang || "").trim();
+    if (!trimmed) return;
+    if (formData.exitedPersonalInfo.languagesKnown.includes(trimmed)) {
+      notify.warn("Language already added");
+      return;
     }
+    setFormData((prev) => ({
+      ...prev,
+      exitedPersonalInfo: {
+        ...prev.exitedPersonalInfo,
+        languagesKnown: [...prev.exitedPersonalInfo.languagesKnown, trimmed],
+      },
+    }));
+    setLanguageInput("");
+    notify.success(`Added language: ${trimmed}`);
   };
 
   const removeLanguage = (index) => {
@@ -1866,21 +2011,25 @@ const ExitedForm = () => {
     notify.info("Removed language");
   };
 
-  const addPreferredWorkArea = () => {
-    const area = prompt("Enter preferred work area:");
-    if (area) {
-      setFormData((prev) => ({
-        ...prev,
-        professionalInterests: {
-          ...prev.professionalInterests,
-          preferredWorkAreas: [
-            ...prev.professionalInterests.preferredWorkAreas,
-            area,
-          ],
-        },
-      }));
-      notify.success(`Added preferred area: ${area}`);
+  const addPreferredWorkArea = (area) => {
+    const trimmed = (area || "").trim();
+    if (!trimmed) return;
+    if (formData.professionalInterests.preferredWorkAreas.includes(trimmed)) {
+      notify.warn("Work area already added");
+      return;
     }
+    setFormData((prev) => ({
+      ...prev,
+      professionalInterests: {
+        ...prev.professionalInterests,
+        preferredWorkAreas: [
+          ...prev.professionalInterests.preferredWorkAreas,
+          trimmed,
+        ],
+      },
+    }));
+    setWorkAreaInput("");
+    notify.success(`Added preferred area: ${trimmed}`);
   };
 
   const removePreferredWorkArea = (index) => {
@@ -1925,7 +2074,7 @@ const ExitedForm = () => {
       endDate: "",
       responsibilities: "",
       reasonForLeaving: "",
-      skills: [],
+      // skills: [],
     });
 
     // close previous entries and open only the new one
@@ -1935,8 +2084,8 @@ const ExitedForm = () => {
   };
 
   const addReference = () => {
-    if (formData.references.length >= 2) {
-      notify.warn("Maximum 2 references allowed");
+    if (formData.references.length >= 1) {
+      notify.warn("Maximum 1 reference allowed");
       return;
     }
     handleArrayAdd("references", {
@@ -2169,13 +2318,45 @@ const ExitedForm = () => {
                 />
               </div>
 
-              {/* city, state, pincode find */}
+              {/* State dropdown */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  State <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={formData.personalInfo.currentAddress.state}
+                  onChange={(e) => {
+                    handleNestedChange(
+                      "personalInfo",
+                      "currentAddress",
+                      "state",
+                      e.target.value,
+                    );
+                    // Reset city when state changes
+                    handleNestedChange(
+                      "personalInfo",
+                      "currentAddress",
+                      "city",
+                      "",
+                    );
+                  }}
+                  disabled={existingCandidate}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition ${existingCandidate ? "bg-gray-100" : "bg-white"}`}
+                >
+                  <option value="">Select State</option>
+                  {INDIAN_STATES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* City dropdown (populated based on selected state) */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   City <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   required
                   value={formData.personalInfo.currentAddress.city}
                   onChange={(e) =>
@@ -2186,32 +2367,14 @@ const ExitedForm = () => {
                       e.target.value,
                     )
                   }
-                  disabled={existingCandidate}
+                  disabled={existingCandidate || !formData.personalInfo.currentAddress.state}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition ${existingCandidate ? "bg-gray-100" : "bg-white"}`}
-                  placeholder="City"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  State <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.personalInfo.currentAddress.state}
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "personalInfo",
-                      "currentAddress",
-                      "state",
-                      e.target.value,
-                    )
-                  }
-                  disabled={existingCandidate}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition ${existingCandidate ? "bg-gray-100" : "bg-white"}`}
-                  placeholder="State"
-                />
+                >
+                  <option value="">{formData.personalInfo.currentAddress.state ? "Select City" : "Select state first"}</option>
+                  {(STATE_CITIES[formData.personalInfo.currentAddress.state] || []).map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -2237,36 +2400,50 @@ const ExitedForm = () => {
               </div>
             </div>
 
+            {/* Languages Known — inline tag input */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Languages Known
               </label>
-              <div className="space-y-2">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {formData.exitedPersonalInfo.languagesKnown.map(
                   (lang, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={lang}
-                        disabled
-                        className="flex-1 px-4 py-2 border rounded bg-gray-50"
-                      />
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-sm font-medium"
+                    >
+                      {lang}
                       <button
                         type="button"
                         onClick={() => removeLanguage(index)}
-                        className="px-3 py-2 bg-red-500 text-white rounded-md"
+                        className="text-indigo-400 hover:text-red-500 transition"
                       >
-                        Remove
+                        ×
                       </button>
-                    </div>
+                    </span>
                   ),
                 )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={languageInput}
+                  onChange={(e) => setLanguageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addLanguage(languageInput);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+                  placeholder="Type a language and press Enter"
+                />
                 <button
                   type="button"
-                  onClick={addLanguage}
-                  className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-md"
+                  onClick={() => addLanguage(languageInput)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
                 >
-                  + Add Language
+                  Add
                 </button>
               </div>
             </div>
@@ -2461,8 +2638,8 @@ const ExitedForm = () => {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Occupation
-                </label>
+                 Father/Spouse Occupation
+                </label>  
                 <input
                   type="text"
                   value={formData.familyBackground.occupation}
@@ -2758,7 +2935,7 @@ const ExitedForm = () => {
                   }}
                   className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-md"
                 >
-                  + Add Education
+                  + Add More Education
                 </button>
               </div>
             </div>
@@ -2985,7 +3162,7 @@ const ExitedForm = () => {
                   }}
                   className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-md"
                 >
-                  + Add Work Experience
+                  + Add More Work Experience
                 </button>
               </div>
             </div>
@@ -3041,36 +3218,50 @@ const ExitedForm = () => {
               />
             </div>
 
+            {/* Preferred Work Areas — inline tag input */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Preferred Work Areas
               </label>
-              <div className="space-y-2">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {formData.professionalInterests.preferredWorkAreas.map(
                   (area, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={area}
-                        disabled
-                        className="flex-1 px-4 py-2 border rounded bg-gray-50"
-                      />
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-sm font-medium"
+                    >
+                      {area}
                       <button
                         type="button"
                         onClick={() => removePreferredWorkArea(index)}
-                        className="px-3 py-2 bg-red-500 text-white rounded-md"
+                        className="text-indigo-400 hover:text-red-500 transition"
                       >
-                        Remove
+                        ×
                       </button>
-                    </div>
+                    </span>
                   ),
                 )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={workAreaInput}
+                  onChange={(e) => setWorkAreaInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addPreferredWorkArea(workAreaInput);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+                  placeholder="Type a work area and press Enter"
+                />
                 <button
                   type="button"
-                  onClick={addPreferredWorkArea}
-                  className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-md"
+                  onClick={() => addPreferredWorkArea(workAreaInput)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
                 >
-                  + Add Work Area
+                  Add
                 </button>
               </div>
             </div>
@@ -3100,29 +3291,18 @@ const ExitedForm = () => {
         return (
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold text-gray-900">
-              References (Max 2)
+              Reference
             </h2>
 
-            {formData.references.map((ref, index) => (
-              <div
-                key={index}
-                className="bg-gray-50 p-6 rounded-lg border border-gray-200 space-y-4"
-              >
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">
-                    Reference #{index + 1}{" "}
-                    {index === 1 && (
-                      <span className="text-sm text-gray-500">(Optional)</span>
-                    )}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => handleArrayRemove("references", index)}
-                    className="px-3 py-1 bg-red-500 text-white rounded-md"
-                  >
-                    Remove
-                  </button>
-                </div>
+            {formData.references.length === 0 ? (
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <p className="text-gray-500 text-sm">No reference added. One will be added automatically.</p>
+              </div>
+            ) : (
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 space-y-4">
+                <h3 className="font-medium text-gray-800">
+                  Reference Details
+                </h3>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
@@ -3131,11 +3311,11 @@ const ExitedForm = () => {
                     </label>
                     <input
                       type="text"
-                      value={ref.name}
+                      value={formData.references[0]?.name || ""}
                       onChange={(e) =>
                         handleArrayUpdate(
                           "references",
-                          index,
+                          0,
                           "name",
                           e.target.value,
                         )
@@ -3151,11 +3331,11 @@ const ExitedForm = () => {
                     </label>
                     <input
                       type="text"
-                      value={ref.relationship}
+                      value={formData.references[0]?.relationship || ""}
                       onChange={(e) =>
                         handleArrayUpdate(
                           "references",
-                          index,
+                          0,
                           "relationship",
                           e.target.value,
                         )
@@ -3171,11 +3351,11 @@ const ExitedForm = () => {
                     </label>
                     <input
                       type="tel"
-                      value={ref.contact}
+                      value={formData.references[0]?.contact || ""}
                       onChange={(e) =>
                         handleArrayUpdate(
                           "references",
-                          index,
+                          0,
                           "contact",
                           e.target.value,
                         )
@@ -3191,11 +3371,11 @@ const ExitedForm = () => {
                     </label>
                     <input
                       type="email"
-                      value={ref.email}
+                      value={formData.references[0]?.email || ""}
                       onChange={(e) =>
                         handleArrayUpdate(
                           "references",
-                          index,
+                          0,
                           "email",
                           e.target.value,
                         )
@@ -3206,19 +3386,7 @@ const ExitedForm = () => {
                   </div>
                 </div>
               </div>
-            ))}
-
-            <div>
-              {formData.references.length < 2 && (
-                <button
-                  type="button"
-                  onClick={addReference}
-                  className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-md"
-                >
-                  + Add Reference
-                </button>
-              )}
-            </div>
+            )}
           </section>
         );
 

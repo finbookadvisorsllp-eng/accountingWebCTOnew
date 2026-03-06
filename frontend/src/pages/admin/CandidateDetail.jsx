@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaArrowLeft } from "react-icons/fa";
 import { candidateAPI } from "../../services/api";
@@ -13,11 +13,6 @@ const CandidateDetail = () => {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [showApproveModal, setShowApproveModal] = useState(false);
-  const [approveData, setApproveData] = useState({
-    designation: "",
-    dateOfJoining: "",
-  });
 
   useEffect(() => {
     fetchCandidate();
@@ -46,29 +41,6 @@ const CandidateDetail = () => {
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to update candidate",
-      );
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleApprove = async () => {
-    if (!approveData.designation || !approveData.dateOfJoining) {
-      toast.error("Please provide designation and date of joining");
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const response = await candidateAPI.approveCandidate(id, approveData);
-      toast.success(
-        `Candidate approved! Employee ID: ${response.data.data.credentials.employeeId}, Password: ${response.data.data.credentials.temporaryPassword}`,
-      );
-      setShowApproveModal(false);
-      fetchCandidate();
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to approve candidate",
       );
     } finally {
       setActionLoading(false);
@@ -121,12 +93,12 @@ const CandidateDetail = () => {
       <AdminLayout>
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Candidate not found</p>
-          <Link
-            to="/admin/candidates"
+          <button
+            onClick={() => navigate("/admin/candidates")}
             className="text-primary-600 hover:text-primary-700 mt-4 inline-block"
           >
             Go back to candidates list
-          </Link>
+          </button>
         </div>
       </AdminLayout>
     );
@@ -146,12 +118,12 @@ const CandidateDetail = () => {
         {/* Header - modern, premium */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link
-              to="/admin/candidates"
+            <button
+              onClick={() => navigate(-1)}
               className="p-2 hover:bg-gray-100 rounded-lg transition"
             >
               <FaArrowLeft className="text-lg text-gray-600" />
-            </Link>
+            </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900">
                 {candidate.personalInfo?.firstName}{" "}
@@ -165,14 +137,16 @@ const CandidateDetail = () => {
                 >
                   {candidate.status}
                 </span>
-                {/* <span className="text-sm text-gray-500">
-                  Profile: {candidate.profilePercentage}% Complete
-                </span> */}
+                {candidate.adminInfo?.employeeId && (
+                  <span className="text-sm text-gray-500 font-mono">
+                    {candidate.adminInfo.employeeId}
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Action Buttons - consistent, clean */}
+          {/* Action Buttons */}
           <div className="flex space-x-3">
             {candidate.status === "INTERESTED" && (
               <button
@@ -186,15 +160,14 @@ const CandidateDetail = () => {
 
             {candidate.status === "EXITED" && (
               <button
-                onClick={() => setShowApproveModal(true)}
-                disabled={actionLoading}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 shadow-sm"
+                onClick={() => navigate(`/admin/candidates/${id}/admin-edit`)}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition shadow-sm"
               >
-                Approve & Generate ID
+                Start Onboarding
               </button>
             )}
 
-            {candidate.status === "APPROVED" && (
+            {(candidate.status === "APPROVED" || candidate.status === "ACTIVE") && (
               <button
                 onClick={() => navigate(`/admin/candidates/${id}/admin-edit`)}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm"
@@ -219,69 +192,6 @@ const CandidateDetail = () => {
           <InterestedCandidateDetail candidate={candidate} />
         )}
       </div>
-
-      {/* Approve Modal (same as before) */}
-      {showApproveModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Approve Candidate
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Designation <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={approveData.designation}
-                  onChange={(e) =>
-                    setApproveData({
-                      ...approveData,
-                      designation: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="e.g., Junior Accountant"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Joining <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={approveData.dateOfJoining}
-                  onChange={(e) =>
-                    setApproveData({
-                      ...approveData,
-                      dateOfJoining: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowApproveModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApprove}
-                disabled={actionLoading}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium disabled:opacity-50"
-              >
-                {actionLoading ? "Approving..." : "Approve"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </AdminLayout>
   );
 };

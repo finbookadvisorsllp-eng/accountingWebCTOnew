@@ -35,6 +35,8 @@ const ComplianceCalendar = () => {
            
            <div className="flex justify-between items-center text-slate-500 font-medium pb-2 border-b border-slate-100">
              <span>Select date</span>
+             {/* i want to add a button see all compliance color should be blue and hover should be blue also want to navigate to compliance calendar page */}
+             <button className="text-blue-500 font-semibold hover:text-blue-600 transition-colors cursor-pointer" onClick={() => navigate(`/employee/clients/${clientId}/master/compliance/detail`)}>See All Compliance</button>
            </div>
 
            <div className="flex items-center justify-between pt-2 pb-4">

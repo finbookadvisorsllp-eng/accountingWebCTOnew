@@ -22,19 +22,32 @@ exports.protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 🔥 Important Part
+    let user;
+
+    // Employee stored in Candidate collection
     if (decoded.role === "employee") {
-      req.user = await Candidate.findById(decoded.id);
+      user = await Candidate.findById(decoded.id);
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "Employee not found",
+        });
+      }
+
+      user.role = "employee"; // important
     } else {
-      req.user = await User.findById(decoded.id).select("-password");
+      user = await User.findById(decoded.id).select("-password");
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "User not found",
+        });
+      }
     }
 
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    req.user = user;
 
     next();
   } catch (err) {
@@ -45,7 +58,7 @@ exports.protect = async (req, res, next) => {
   }
 };
 
-// Grant access to specific roles
+// Role based access
 exports.authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -54,6 +67,7 @@ exports.authorize = (...roles) => {
         message: `User role ${req.user.role} is not authorized to access this route`,
       });
     }
+
     next();
   };
 };

@@ -9,7 +9,6 @@ const Landing = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <FaCalculator className="text-3xl text-primary-600" />
               <span className="text-2xl font-bold text-gray-800">AccounTech Advisory</span>
             </div>
             <div className="flex items-center space-x-4">
@@ -195,7 +194,6 @@ const Landing = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <FaCalculator className="text-2xl text-primary-400" />
                 <span className="text-xl font-bold">AccounTech</span>
               </div>
               <p className="text-gray-400">

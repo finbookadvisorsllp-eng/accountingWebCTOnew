@@ -308,7 +308,6 @@ import AttendanceHistory from "./components/employeeModule/AttendanceHistory";
 import ReportsAnalytics from "./components/employeeModule/ReportsAnalytics";
 import Communication from "./components/employeeModule/Communication";
 import TeamManagement from "./components/employeeModule/TeamManagement";
-import TeamSummary from "./components/employeeModule/TeamSummary";
 import ClientFinancialReport from "./components/employeeModule/ClientFinancialReport";
 import MoMSalesAndPurchase from "./components/employeeModule/MoMSalesAndPurchase";
 import GSTCalculation from "./components/employeeModule/GSTCalculation";
@@ -627,7 +626,6 @@ function App() {
 
             {/* Team */}
             <Route path="team" element={<TeamManagement />} />
-            <Route path="team/:id" element={<TeamSummary />} />
 
             {/* Fallback for /employee/* */}
             <Route path="*" element={<DashboardMetrics />} />
