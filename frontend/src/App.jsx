@@ -270,6 +270,8 @@ import CreateCompliance from "./pages/admin/compliances/CreateCompliance";
 import EditCompliance from "./pages/admin/compliances/EditCompliance";
 import CreateClient from "./pages/admin/clients/CreateClient";
 import ClientsList from "./pages/admin/clients/ClientsList";
+import ViewClient from "./pages/admin/clients/ViewClient";
+import EditClient from "./pages/admin/clients/EditClient";
 
 // Employee (top-level dashboard - legacy)
 // import EmployeeDashboard from "./pages/employee/Dashboard";
@@ -462,6 +464,15 @@ function App() {
 
           {/* Admin - Client management */}
           <Route
+            path="/admin/clients/create"
+            element={
+              <PrivateRoute allowedRoles={["admin"]}>
+                <CreateClient />
+              </PrivateRoute>
+            }
+          />
+          
+          <Route
             path="/admin/clients"
             element={
               <PrivateRoute allowedRoles={["admin"]}>
@@ -470,10 +481,18 @@ function App() {
             }
           />
           <Route
-            path="/admin/clients/create"
+            path="/admin/clients/:id"
             element={
               <PrivateRoute allowedRoles={["admin"]}>
-                <CreateClient />
+                <ViewClient />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/clients/edit/:id"
+            element={
+              <PrivateRoute allowedRoles={["admin"]}>
+                <EditClient />
               </PrivateRoute>
             }
           />

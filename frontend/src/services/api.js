@@ -110,6 +110,7 @@ export const uploadAPI = {
 export const clientAPI = {
   createClient: (data) => api.post("/clients", data),
   getClients: (params) => api.get("/clients", { params }),
+  getMyClients: (params) => api.get("/clients/my-clients", { params }),
   getClient: (id) => api.get(`/clients/${id}`),
   updateClient: (id, data) => api.put(`/clients/${id}`, data),
   deleteClient: (id) => api.delete(`/clients/${id}`),
@@ -160,6 +161,24 @@ export const complianceAPI = {
   create: (data) => api.post("/compliances", data),
   update: (id, data) => api.put(`/compliances/${id}`, data),
   remove: (id) => api.delete(`/compliances/${id}`),
+};
+
+// Attendance endpoints
+export const attendanceAPI = {
+  // Office
+  officeCheckIn: (data) => api.post("/attendance/office/check-in", data),
+  officeCheckOut: (data) => api.post("/attendance/office/check-out", data),
+  officeToday: () => api.get("/attendance/office/today"),
+  officeHistory: (params) => api.get("/attendance/office/history", { params }),
+  // Client visit
+  clientCheckIn: (clientId, data) =>
+    api.post(`/attendance/client/${clientId}/check-in`, data),
+  clientCheckOut: (clientId, data) =>
+    api.post(`/attendance/client/${clientId}/check-out`, data),
+  clientHistory: (clientId) =>
+    api.get(`/attendance/client/${clientId}/history`),
+  // Summary
+  getSummary: (params) => api.get("/attendance/summary", { params }),
 };
 
 export default api;

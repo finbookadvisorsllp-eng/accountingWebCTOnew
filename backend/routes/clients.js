@@ -15,6 +15,14 @@ const { protect, authorize } = require("../middleware/auth");
 // Create Client (Admin Only)
 router.post("/", protect, authorize("admin"), clientCtrl.createClient);
 
+// Get Clients assigned to logged-in employee
+router.get(
+  "/my-clients",
+  protect,
+  authorize("employee"),
+  clientCtrl.getMyClients,
+);
+
 // Get All Clients (Admin)
 router.get("/", protect, authorize("admin"), clientCtrl.getClients);
 

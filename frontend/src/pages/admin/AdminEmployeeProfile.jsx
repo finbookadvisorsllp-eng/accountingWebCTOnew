@@ -390,7 +390,7 @@ const AdminOnboardPage = () => {
 
       {/* Editable — Father/Spouse + Contact + Address */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6">
-        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">
+        <h3 className="text-sm font-bold text-gray-700   uppercase tracking-wider mb-4">
           Additional Details (Editable)
         </h3>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">

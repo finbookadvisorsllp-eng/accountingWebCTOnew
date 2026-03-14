@@ -90,6 +90,8 @@ app.use("/api/compliances", require("./routes/compliance.routes"));
 
 
 app.use("/api/clients", require("./routes/clients"));
+app.use("/api/attendance", require("./routes/attendanceRoutes"));
+app.use("/api/feedback", require("./routes/feedbackRoutes"));
 // ================= HEALTH CHECK =================
 app.get("/api/health", (req, res) => {
   res.status(200).json({

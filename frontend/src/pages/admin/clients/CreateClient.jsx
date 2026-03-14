@@ -140,7 +140,7 @@ export default function ClientForm({ clientId = null, onSaved = () => {} }) {
           accountants: accountants,
           companies: normalizeMasterField(
             companiesRes?.data?.data ?? companiesRes?.data ?? companiesRes,
-            "companyName",
+            "entityName",
           ),
         });
       } catch (err) {
@@ -462,6 +462,7 @@ export default function ClientForm({ clientId = null, onSaved = () => {} }) {
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                 Group Company (Parent)
               </label>
+              {/* i want group company to be optional and if selected then it should be stored as a string and if not selected then it should be stored as null and in the dropdown should be show name not id */}
               <select
                 name="groupCompany"
                 value={form.groupCompany}

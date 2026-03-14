@@ -1,6 +1,7 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ChevronRight, Loader2, Mail, User, Building2, Phone } from 'lucide-react';
+import { clientAPI } from '../../services/api';
 
 const managementOptions = [
   { id: 'master', title: 'Client master', desc: 'Manage client profiles easily.', color: 'bg-green-500' },
@@ -13,8 +14,40 @@ const managementOptions = [
   { id: 'documents', title: 'Documents and Files', desc: 'Securely store and access important records.', color: 'bg-slate-700' },
 ];
 
-const ClientManagement = ({ client, onMenuClick }) => {
+const ClientManagement = () => {
   const navigate = useNavigate();
+  const { id: clientId } = useParams();
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (clientId) {
+      fetchClient();
+    }
+  }, [clientId]);
+
+  async function fetchClient() {
+    try {
+      setLoading(true);
+      const res = await clientAPI.getClient(clientId);
+      setClient(res?.data || null);
+    } catch (err) {
+      console.error('Failed to fetch client', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Generate initials from entity name
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F9FBFB] scrollbar-hide w-full pb-8">
@@ -22,20 +55,47 @@ const ClientManagement = ({ client, onMenuClick }) => {
       {/* Main Content Area */}
       <div className="p-4 md:p-8 lg:p-10 w-full max-w-4xl mx-auto space-y-6 lg:space-y-8">
         
-        {/* Profile Card */}
-        <div className="bg-[#6DA4A4] rounded-2xl p-6 shadow-md flex items-center space-x-5 text-white">
-          <img 
-            src={client?.avatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=150&auto=format&fit=crop'} 
-            alt={client?.name || 'Client Name'} 
-            className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-white/50 shadow-sm"
-          />
-          <div className="flex flex-col">
-            <h2 className="text-xl md:text-2xl font-bold">{client?.name || 'Daniel Smith'}</h2>
-            <p className="text-white/80 text-sm md:text-base">{(client?.name || 'Daniel12').replace(' ', '').toLowerCase()}@gmail.com</p>
+        {/* Profile Card — Dynamic */}
+        {loading ? (
+          <div className="bg-[#6DA4A4] rounded-2xl p-8 shadow-md flex items-center justify-center">
+            <Loader2 size={32} className="text-white animate-spin" />
           </div>
-        </div>
+        ) : (
+          <div className="bg-[#6DA4A4] rounded-2xl p-6 shadow-md flex items-center space-x-5 text-white">
+            {/* Avatar / Initials */}
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-sm shrink-0">
+              {client ? getInitials(client.contactName) : <User size={32} />}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <h2 className="text-xl md:text-2xl font-bold truncate">
+                {client?.contactName || 'Unknown Client'}
+              </h2>
 
-        {/* Management List Section */}
+             {client?.entityName && (
+                <div className="flex items-center space-x-2 mt-1">
+                  <Building2 size={14} className="text-white/70 shrink-0" />
+                  <p className="text-white/80 text-sm truncate">{client.entityName}</p>
+                </div>
+              )}
+
+              {client?.contactEmail && (
+                <div className="flex items-center space-x-2 mt-1">
+                  <Mail size={14} className="text-white/70 shrink-0" />
+                  <p className="text-white/80 text-xs mt-0.5">{client.contactEmail}</p>
+                </div>
+              )}
+              {client?.contactPhone && (
+
+                <div className="flex items-center space-x-2 mt-1">
+                  <Phone size={14} className="text-white/70 shrink-0" />
+                  <p className="text-white/80 text-xs mt-0.5">{client.contactPhone}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Management List Section — Static */}
         <div className="bg-white rounded-[24px] p-6 md:p-8 shadow-sm border border-slate-200">
           <div className="mb-6">
             <h3 className="font-bold text-slate-800 text-xl md:text-2xl mb-1">Client Management</h3>
@@ -43,28 +103,10 @@ const ClientManagement = ({ client, onMenuClick }) => {
           </div>
 
           <div className="space-y-4">
-            {managementOptions.map((option, index) => (
+            {managementOptions.map((option) => (
               <div 
                 key={option.id}
-                onClick={() => {
-                  if (option.id === 'master') {
-                     navigate(`/employee/clients/${client?.id || '1'}/master`);
-                  } else if (option.id === 'checkin') {
-                     navigate(`/employee/clients/${client?.id || '1'}/checkin`);
-                  } else if (option.id === 'history') {
-                     navigate(`/employee/clients/${client?.id || '1'}/history`);
-                  } else if (option.id === 'financial') {
-                     navigate(`/employee/clients/${client?.id || '1'}/financial`);
-                  } else if (option.id === 'dashboard') {
-                     navigate(`/employee/clients/${client?.id || '1'}/dashboard`);
-                  } else if (option.id === 'documents') {
-                     navigate(`/employee/clients/${client?.id || '1'}/documents`);
-                  } else if (option.id === 'reports') {
-                     navigate(`/employee/clients/${client?.id || '1'}/reports`);
-                  } else if (option.id === 'queries') {
-                     navigate(`/employee/clients/${client?.id || '1'}/queries`);
-                  }
-                }}
+                onClick={() => navigate(`/employee/clients/${clientId}/${option.id}`)}
                 className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-[#3A565A]/30 transition-all flex items-center justify-between cursor-pointer group relative overflow-hidden"
               >
                 {/* Colored Left Border indicator */}

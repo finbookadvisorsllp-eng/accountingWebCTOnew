@@ -10,13 +10,47 @@ function genPassword(len = 10) {
   return nanoid(len);
 }
 
+/**
+ * Convert empty strings to null for fields that should be ObjectId or null.
+ * Also trim strings if needed.
+ */
+
+function sanitizePayload(payload) {
+  const referenceFields = [
+    "empAssign",
+    "groupCompany",
+    "entityType",
+    "natureOfBusiness",
+    "createdBy",
+  ];
+  const sanitized = { ...payload };
+  for (let field of referenceFields) {
+    if (sanitized[field] === "") {
+      sanitized[field] = null;
+    }
+  }
+  // Also handle arrays of ObjectIds (like complianceStatus) – remove empty strings
+  if (Array.isArray(sanitized.complianceStatus)) {
+    sanitized.complianceStatus = sanitized.complianceStatus.filter(
+      (id) => id && id !== ""
+    );
+  }
+  // taskApplicability: ensure taskId is not empty string
+  if (Array.isArray(sanitized.taskApplicability)) {
+    sanitized.taskApplicability = sanitized.taskApplicability.filter(
+      (t) => t.taskId && t.taskId !== ""
+    );
+  }
+  return sanitized;
+}
+
 exports.createClient = async (req, res) => {
   try {
-    const payload = req.body;
+    const payload = sanitizePayload(req.body);
 
     // create clientId and password
     const clientId = genClientId();
-    const plainPassword = "client@123";
+    const plainPassword = "client@123"; // or genPassword()
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(plainPassword, salt);
 
@@ -32,7 +66,6 @@ exports.createClient = async (req, res) => {
     // Return generatedPassword once so admin can copy
     const out = client.toObject();
     out.generatedPassword = plainPassword;
-    // Do NOT include passwordHash in response explicitly
     delete out.passwordHash;
 
     return res.status(201).json(out);
@@ -43,6 +76,7 @@ exports.createClient = async (req, res) => {
       .json({ message: "Failed to create client", error: err.message });
   }
 };
+
 
 exports.getClients = async (req, res) => {
   try {
@@ -64,6 +98,25 @@ exports.getClients = async (req, res) => {
   }
 };
 
+// GET /api/clients/my-clients — Employee sees only their assigned clients
+exports.getMyClients = async (req, res) => {
+  try {
+    const employeeId = req.user._id; // Candidate ObjectId (set by auth middleware)
+    const { status } = req.query;
+    const q = { empAssign: employeeId };
+    if (status) q.status = status;
+
+    const clients = await Client.find(q)
+      .populate("entityType natureOfBusiness")
+      .sort({ createdAt: -1 });
+
+    res.json({ data: clients, total: clients.length });
+  } catch (err) {
+    console.error("getMyClients error:", err);
+    res.status(500).json({ message: "Failed to fetch your clients" });
+  }
+};
+
 exports.getClient = async (req, res) => {
   try {
     const client = await Client.findById(req.params.id).populate(
@@ -79,11 +132,11 @@ exports.getClient = async (req, res) => {
 
 exports.updateClient = async (req, res) => {
   try {
-    const updates = req.body;
+    const updates = sanitizePayload(req.body);
     const client = await Client.findByIdAndUpdate(req.params.id, updates, {
       new: true,
     }).populate(
-      "entityType natureOfBusiness empAssign groupCompany complianceStatus taskApplicability.taskId",
+      "entityType natureOfBusiness empAssign groupCompany complianceStatus taskApplicability.taskId"
     );
     if (!client) return res.status(404).json({ message: "Client not found" });
     res.json(client);
