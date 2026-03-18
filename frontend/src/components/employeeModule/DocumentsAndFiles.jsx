@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, UploadCloud } from 'lucide-react';
+import CompanySelector from './CompanySelector';
 
 const recentFiles = [
   { id: 1, name: 'Inventory_Tracking_Sheet_August.xlsx', desc: 'Description or email of tenant', type: 'excel' },
@@ -46,6 +47,7 @@ const DocumentsAndFiles = () => {
 
       {/* Main Content Area */}
       <div className="p-4 md:p-8 w-full max-w-2xl mx-auto space-y-8 pt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <CompanySelector />
         
         {/* Upload Card */}
         <div className="bg-white rounded-[20px] p-6 shadow-sm border border-slate-200">

@@ -73,7 +73,7 @@ const DashboardMetrics = () => {
       
       // Find earliest client visit for today
       const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
-      const myClients = clientRes?.data?.data || [];
+      const myClients = (clientRes?.data?.data || []).filter(c => !c.groupCompany);
       const todayClients = myClients.filter(c => c.visitDays?.includes(today));
       
       // Simulating "next" by picking the first one available
@@ -149,6 +149,18 @@ const DashboardMetrics = () => {
     });
   };
 
+  const formatTo12Hr = (timeStr) => {
+    if (!timeStr) return '--:--';
+    if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    const [hrs, mins] = parts;
+    const h = parseInt(hrs);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hr12 = h % 12 || 12;
+    return `${hr12}:${mins} ${ampm}`;
+  };
+
   const isWorking = todayRecord?.status === 'checked-in' || todayRecord?.status === 'late';
   const todayDateStr = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -157,6 +169,7 @@ const DashboardMetrics = () => {
     year: 'numeric',
   });
 
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
   return (
     <div className="flex-1 overflow-y-auto bg-[#F9FBFB] scrollbar-hide w-full pb-6">
       {/* Main Content Area */}
@@ -203,22 +216,26 @@ const DashboardMetrics = () => {
                </div>
                
                <div className="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-slate-100">
-                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col">
-                     <div className="flex items-center space-x-1.5 text-[#3A565A] mb-0.5">
-                       <Calendar size={12} />
-                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Scheduled Day</span>
-                     </div>
-                     <span className="font-bold text-slate-700 text-xs">{nextClient?.visitDays?.join(', ') || 'None'}</span>
-                  </div>
-                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col">
-                     <div className="flex items-center space-x-1.5 text-[#3A565A] mb-0.5">
-                       <Clock size={12} />
-                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Visit Time</span>
-                     </div>
-                     <span className="font-bold text-slate-700 text-xs">
-                       {nextClient?.visitTimeFrom ? `${nextClient.visitTimeFrom} - ${nextClient.visitTimeTo}` : '--:--'}
-                     </span>
-                  </div>
+                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col">
+                      <div className="flex items-center space-x-1.5 text-[#3A565A] mb-0.5">
+                        <Calendar size={12} />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Scheduled Day</span>
+                      </div>
+                      <span className="font-bold text-slate-700 text-xs ml-4">
+                        {nextClient?.visitDays?.includes(today) ? today : (nextClient?.visitDays?.join(', ') || 'None')}
+                      </span>
+                   </div>
+                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col">
+                      <div className="flex items-center space-x-1.5 text-[#3A565A] mb-0.5">
+                        <Clock size={12} />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Visit Time</span>
+                      </div>
+                      <span className="font-bold text-slate-700 text-xs">
+                        {nextClient?.visitTimeFrom 
+                          ? `${formatTo12Hr(nextClient.visitTimeFrom)} - ${formatTo12Hr(nextClient.visitTimeTo)}` 
+                          : '--:--'}
+                      </span>
+                   </div>
                </div>
 
                <Link 

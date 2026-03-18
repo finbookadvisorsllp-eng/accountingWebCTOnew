@@ -116,6 +116,7 @@ export const clientAPI = {
   deleteClient: (id) => api.delete(`/clients/${id}`),
   assignAccountant: (clientId, accountantId) =>
     api.put(`/clients/${clientId}/assign`, { accountantId }),
+  getChildCompanies: (id) => api.get(`/clients/${id}/children`),
   getStats: () => api.get("/clients/stats"),
 };
 
@@ -180,5 +181,31 @@ export const attendanceAPI = {
   // Summary
   getSummary: (params) => api.get("/attendance/summary", { params }),
 };
+
+export const businessSummaryAPI = {
+  createOrUpdate: (data) => api.post("/business-summary", data),
+  getByClientAndYear: (clientId, year) => api.get(`/business-summary/${clientId}`, { params: { year } }),
+  getSingleMonth: (clientId, year, month) => api.get(`/business-summary/${clientId}/${year}/${month}`),
+};
+
+export const gstLiabilityAPI = {
+  createOrUpdate: (data) => api.post("/gst-liability", data),
+  getByClientAndYear: (clientId, year) => api.get(`/gst-liability/${clientId}`, { params: { year } }),
+  getSingleMonth: (clientId, year, month) => api.get(`/gst-liability/${clientId}/${year}/${month}`),
+};
+
+export const pnlAPI = {
+  createOrUpdate: (data) => api.post("/pnl", data),
+  getByYear: (clientId, year) => api.get(`/pnl/${clientId}`, { params: { year } }),
+  getSummary: (clientId, year) => api.get(`/pnl/${clientId}/summary`, { params: { year } }),
+};
+
+export const balanceSheetAPI = {
+  createOrUpdate: (data) => api.post("/balance-sheet", data),
+  getByYear: (clientId, year) => api.get(`/balance-sheet/${clientId}`, { params: { year } }),
+  getSummary: (clientId, year) => api.get(`/balance-sheet/${clientId}/summary`, { params: { year } }),
+};
+
+// complianceAPI merged above
 
 export default api;

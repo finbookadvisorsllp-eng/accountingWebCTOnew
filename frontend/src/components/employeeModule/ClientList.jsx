@@ -17,7 +17,7 @@ const ClientList = () => {
     try {
       setLoading(true);
       const res = await clientAPI.getMyClients();
-      const rawClients = res?.data?.data || [];
+      const rawClients = (res?.data?.data || []).filter(c => !c.groupCompany);
       
       // Sort: Today's visits first
       const today = new Date().toLocaleDateString('en-US', { weekday: 'short' }); // "Mon", "Tue", etc.

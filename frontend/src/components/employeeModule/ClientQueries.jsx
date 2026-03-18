@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MessageSquare, Plus, Clock, CheckCircle2, Search, Filter } from 'lucide-react';
+import CompanySelector from './CompanySelector';
 
 const mockQueries = [
   { id: 'Q-1042', subject: 'Discrepancy in Q2 GST Filing', status: 'Open', date: 'Oct 24, 2024', replies: 2, excerpt: 'I noticed the SGST amount seems lower than expected on the recent Q2...' },
@@ -35,6 +36,7 @@ const ClientQueries = () => {
 
       {/* Main Content Area */}
       <div className="p-4 md:p-8 w-full max-w-4xl mx-auto space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <CompanySelector />
         
         {/* Controls Row */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

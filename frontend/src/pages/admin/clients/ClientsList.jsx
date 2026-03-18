@@ -14,7 +14,7 @@ export default function ClientList() {
   async function fetchClients() {
     try {
       const res = await clientAPI.getClients();
-      setClients(res?.data?.data || []);
+      setClients((res?.data?.data || []).filter(c => !c.groupCompany));
     } catch (err) {
       console.error("Failed to fetch clients", err);
     } finally {

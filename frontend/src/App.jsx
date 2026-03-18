@@ -281,6 +281,7 @@ import EmployeeLayout from "./components/employeeModule/EmployeeLayout";
 import DashboardMetrics from "./components/employeeModule/DashboardMetrics";
 import ClientList from "./components/employeeModule/ClientList";
 import ClientManagement from "./components/employeeModule/ClientManagement";
+import ClientLayout from "./components/employeeModule/ClientLayout";
 import ClientMaster from "./components/employeeModule/ClientMaster";
 import KYCDetails from "./components/employeeModule/KYCDetails";
 import ComplianceCalendar from "./components/employeeModule/ComplianceCalendar";
@@ -527,115 +528,53 @@ function App() {
 
             {/* Clients */}
             <Route path="clients" element={<ClientList />} />
-            <Route path="clients/:id" element={<ClientManagement />} />
-            <Route path="clients/:id/master" element={<ClientMaster />} />
-            <Route path="clients/:id/master/kyc" element={<KYCDetails />} />
-            <Route
-              path="clients/:id/master/compliance"
-              element={<ComplianceCalendar />}
-            />
-            <Route
-              path="clients/:id/master/compliance/detail"
-              element={<ComplianceDetail />}
-            />
-            <Route path="clients/:id/master/tasks" element={<TaskList />} />
-            <Route path="clients/:id/checkin" element={<CheckInCheckOut />} />
 
-            {/* Historical */}
-            <Route path="clients/:id/history" element={<HistoricalData />} />
-            <Route
-              path="clients/:id/history/company-kyc"
-              element={<CompanyKYC />}
-            />
-            <Route
-              path="clients/:id/history/owner-kyc"
-              element={<OwnerKYC />}
-            />
-            <Route
-              path="clients/:id/history/itr"
-              element={<IncomeTaxReturn />}
-            />
-            <Route
-              path="clients/:id/history/audit"
-              element={<AuditBalanceSheet />}
-            />
-            <Route path="clients/:id/history/gst" element={<GSTReturn />} />
+            <Route path="clients/:id" element={<ClientLayout />}>
+              <Route index element={<ClientManagement />} />
+              <Route path="master" element={<ClientMaster />} />
+              <Route path="master/kyc" element={<KYCDetails />} />
+              <Route path="master/compliance" element={<ComplianceCalendar />} />
+              <Route path="master/compliance/detail" element={<ComplianceDetail />} />
+              <Route path="master/tasks" element={<TaskList />} />
+              <Route path="checkin" element={<CheckInCheckOut />} />
 
-            {/* Financial */}
-            <Route path="clients/:id/financial" element={<FinancialData />} />
-            <Route
-              path="clients/:id/financial/revenue"
-              element={<RevenueFromBusiness />}
-            />
-            <Route
-              path="clients/:id/financial/gst-liability"
-              element={<GSTLiabilityCal />}
-            />
-            <Route
-              path="clients/:id/financial/pndl"
-              element={<PndLInputField />}
-            />
-            <Route path="clients/:id/financial/bs" element={<BSInputField />} />
-            <Route
-              path="clients/:id/financial/due-date"
-              element={<DueDateReminder />}
-            />
-            <Route
-              path="clients/:id/financial/debtors"
-              element={<DebtorsCreditors />}
-            />
-            <Route
-              path="clients/:id/financial/periodic"
-              element={<PeriodicData />}
-            />
-            <Route
-              path="clients/:id/financial/task-progress"
-              element={<TaskProgress />}
-            />
+              {/* Historical */}
+              <Route path="history" element={<HistoricalData />} />
+              <Route path="history/company-kyc" element={<CompanyKYC />} />
+              <Route path="history/owner-kyc" element={<OwnerKYC />} />
+              <Route path="history/itr" element={<IncomeTaxReturn />} />
+              <Route path="history/audit" element={<AuditBalanceSheet />} />
+              <Route path="history/gst" element={<GSTReturn />} />
 
-            {/* Reports */}
-            <Route
-              path="clients/:id/reports"
-              element={<ClientFinancialReport />}
-            />
-            <Route
-              path="clients/:id/reports/mom-sales"
-              element={<MoMSalesAndPurchase />}
-            />
-            <Route
-              path="clients/:id/reports/gst"
-              element={<GSTCalculation />}
-            />
-            <Route
-              path="clients/:id/reports/periodic"
-              element={<PeriodicKeyFinancials />}
-            />
-            <Route
-              path="clients/:id/reports/pndl-yoy"
-              element={<PndLYoYComparision />}
-            />
-            <Route
-              path="clients/:id/reports/bs-yoy"
-              element={<BSYoYComparision />}
-            />
-            <Route
-              path="clients/:id/reports/key-ratios"
-              element={<KeyRatios />}
-            />
+              {/* Financial */}
+              <Route path="financial" element={<FinancialData />} />
+              <Route path="financial/revenue" element={<RevenueFromBusiness />} />
+              <Route path="financial/gst-liability" element={<GSTLiabilityCal />} />
+              <Route path="financial/pndl" element={<PndLInputField />} />
+              <Route path="financial/bs" element={<BSInputField />} />
+              <Route path="financial/due-date" element={<DueDateReminder />} />
+              <Route path="financial/debtors" element={<DebtorsCreditors />} />
+              <Route path="financial/periodic" element={<PeriodicData />} />
+              <Route path="financial/task-progress" element={<TaskProgress />} />
+
+              {/* Reports */}
+              <Route path="reports" element={<ClientFinancialReport />} />
+              <Route path="reports/mom-sales" element={<MoMSalesAndPurchase />} />
+              <Route path="reports/gst" element={<GSTCalculation />} />
+              <Route path="reports/periodic" element={<PeriodicKeyFinancials />} />
+              <Route path="reports/pndl-yoy" element={<PndLYoYComparision />} />
+              <Route path="reports/bs-yoy" element={<BSYoYComparision />} />
+              <Route path="reports/key-ratios" element={<KeyRatios />} />
+
+              {/* Standalone client routes */}
+              <Route path="documents" element={<DocumentsAndFiles />} />
+              <Route path="reports/dashboard" element={<FinancialDashboard />} />
+              <Route path="queries" element={<ClientQueries />} />
+            </Route>
+
 
             {/* Profile */}
             <Route path="profile/*" element={<ProfileLayout />} />
-
-            {/* Standalone client routes */}
-            <Route
-              path="clients/:id/documents"
-              element={<DocumentsAndFiles />}
-            />
-            <Route
-              path="clients/:id/dashboard"
-              element={<FinancialDashboard />}
-            />
-            <Route path="clients/:id/queries" element={<ClientQueries />} />
 
             {/* Sidebar/global */}
             <Route path="resources" element={<Resources />} />

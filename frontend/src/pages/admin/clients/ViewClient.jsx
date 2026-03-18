@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { clientAPI } from "../../../services/api";
 import AdminLayout from "../../../components/AdminLayout";
@@ -14,20 +14,30 @@ import {
   FileText, 
   Clock, 
   CheckCircle2, 
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  Eye
 } from "lucide-react";
 
 export default function ViewClient() {
   const { id } = useParams();
   const [client, setClient] = useState(null);
+  const [children, setChildren] = useState([]);
+  const [isEditDropdownOpen, setIsEditDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     async function fetchClient() {
       try {
-        const res = await clientAPI.getClient(id);
-        setClient(res?.data || null);
+        const [clientRes, childrenRes] = await Promise.all([
+          clientAPI.getClient(id),
+          clientAPI.getChildCompanies(id)
+        ]);
+        setClient(clientRes?.data || null);
+        setChildren(childrenRes?.data?.data || []);
       } catch (err) {
         console.error("Failed to fetch client details", err);
         setError("Could not load client details. Please try again later.");
@@ -37,6 +47,16 @@ export default function ViewClient() {
     }
     fetchClient();
   }, [id]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsEditDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (loading) {
     return (
@@ -105,12 +125,50 @@ export default function ViewClient() {
               </span>
             </h1>
           </div>
-          <Link 
-            to={`/admin/clients/edit/${client._id}`}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold rounded-lg shadow-sm transition-all"
-          >
-            <Edit3 className="w-4 h-4" /> Edit Client
-          </Link>
+          {children.length === 0 ? (
+            <Link 
+              to={`/admin/clients/edit/${client._id}`}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold rounded-lg shadow-sm transition-all"
+            >
+              <Edit3 className="w-4 h-4" /> Edit Client
+            </Link>
+          ) : (
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={() => setIsEditDropdownOpen(!isEditDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold rounded-lg shadow-sm transition-all"
+              >
+                <Edit3 className="w-4 h-4" /> Edit Options <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isEditDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isEditDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg p-1 z-50">
+                  <Link to={`/admin/clients/edit/${client._id}`} className="block px-3 py-2 text-[12px] font-semibold text-slate-800 hover:bg-slate-50 rounded-lg">
+                     Edit Main Company
+                  </Link>
+                  <div className="border-t border-slate-100 my-1"></div>
+                  <p className="px-3 py-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Group Companies</p>
+                  <div className="max-h-48 overflow-y-auto scrollbar-hide">
+                    {children.map(child => (
+                       <div key={child._id} className="flex items-center justify-between px-3 py-1 hover:bg-slate-50 rounded-lg transition-colors">
+                          <span className="text-[12px] text-slate-600 truncate max-w-[120px]" title={child.entityName}>
+                             {child.entityName}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                             <Link to={`/admin/clients/${child._id}`} title="View Details" className="text-slate-400 hover:text-slate-600 p-1">
+                                <Eye className="w-3.5 h-3.5" />
+                             </Link>
+                             <Link to={`/admin/clients/edit/${child._id}`} title="Edit Client" className="text-blue-500 hover:text-blue-600 p-1">
+                                <Edit3 className="w-3.5 h-3.5" />
+                             </Link>
+                          </div>
+                       </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -198,6 +256,28 @@ export default function ViewClient() {
                 <DetailItem label="To" value={client.visitTimeTo} />
               </div>
             </InfoCard>
+
+            {children.length > 0 && (
+              <InfoCard title="Group / Branch Companies" icon={Building2}>
+                <div className="space-y-2">
+                  {children.map(child => (
+                    <div key={child._id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100 transition-all">
+                      <span className="text-[12px] font-semibold text-slate-700 truncate max-w-[120px]" title={child.entityName}>
+                        {child.entityName}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Link to={`/admin/clients/${child._id}`} className="text-slate-500 hover:text-slate-700 text-[11px] font-bold flex items-center gap-1">
+                          <Eye className="w-3 h-3" /> View
+                        </Link>
+                        <Link to={`/admin/clients/edit/${child._id}`} className="text-blue-600 hover:text-blue-800 text-[11px] font-bold flex items-center gap-1">
+                          <Edit3 className="w-3 h-3" /> Edit
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </InfoCard>
+            )}
           </div>
         </div>
       </div>

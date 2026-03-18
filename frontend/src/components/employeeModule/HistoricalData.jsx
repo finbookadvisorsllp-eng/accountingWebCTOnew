@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, FileText, ChevronDown } from 'lucide-react';
+import CompanySelector from './CompanySelector';
 
 const mockHistoryOptions = [
   { id: 'company-kyc', title: 'Company KYC', status: 'Last Updated: Jan 2024' },
@@ -31,11 +32,7 @@ const HistoricalData = () => {
       {/* Main Content Area */}
       <div className="p-4 md:p-8 w-full max-w-3xl mx-auto space-y-6">
         
-        {/* Company Dropdown Mock */}
-        <div className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 shadow-sm">
-           <span className="text-slate-500 font-medium">Company selection</span>
-           <ChevronDown size={20} className="text-slate-400" />
-        </div>
+        <CompanySelector />
 
         {/* History Options List */}
         <div className="space-y-4 pt-2">

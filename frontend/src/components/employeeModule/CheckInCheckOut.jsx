@@ -10,9 +10,16 @@ const CheckInCheckOut = () => {
   const [todayRecord, setTodayRecord] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [geoStatus, setGeoStatus] = useState('prompt');
 
   useEffect(() => {
     fetchData();
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then(result => {
+        setGeoStatus(result.state);
+        result.onchange = () => setGeoStatus(result.state);
+      });
+    }
   }, [clientId]);
 
   const fetchData = async () => {
@@ -44,12 +51,39 @@ const CheckInCheckOut = () => {
     try {
       setActionLoading(true);
       let loc = {};
-      try {
-        const pos = await new Promise((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-        );
-        loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-      } catch (e) {}
+      
+      if (!navigator.geolocation) {
+         alert("Geolocation is not supported or is disabled by this browser. If you are accessing over HTTP, please use HTTPS for location capture to work.");
+      } else {
+         try {
+           const pos = await new Promise((resolve, reject) =>
+             navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                enableHighAccuracy: true, 
+                timeout: 15000, 
+                maximumAge: 5000 
+             })
+           );
+           if (pos && pos.coords) {
+             loc = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+             
+             // Reverse geocode
+             try {
+               const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.latitude}&lon=${loc.longitude}`, {
+                 headers: { 'Accept-Language': 'en' }
+               });
+               const data = await res.json();
+               if (data && data.display_name) {
+                 loc.address = data.display_name;
+               }
+             } catch (geoErr) {
+               console.error("Reverse geocoding failed", geoErr);
+             }
+           }
+         } catch (e) {
+            console.warn("Geolocation failed", e);
+            alert(`Location capture failed: ${e.message || "Timeout"}. Please allow location access first and try again.`);
+         }
+      }
 
       if (type === 'in') {
         await attendanceAPI.clientCheckIn(clientId, loc);
@@ -81,6 +115,37 @@ const CheckInCheckOut = () => {
     };
   };
 
+  const renderLocationLink = (loc) => {
+    if (!loc || (!loc.latitude && !loc.longitude && !loc.address)) {
+      return <span className="text-[9px] text-slate-400 font-medium italic mt-0.5 block">Location not recorded</span>;
+    }
+    return (
+      <div className="flex flex-col space-y-0.5 mt-1">
+       {!loc.address && loc.latitude && loc.longitude && (
+          <span className="text-[9px] text-slate-500 font-bold">
+            ({loc.latitude?.toFixed(4)}, {loc.longitude?.toFixed(4)})
+          </span>
+        )}
+        {loc.address && (
+          <span className="text-[9px] text-slate-600 font-semibold break-words max-w-[150px] bg-slate-50 p-1 rounded border border-slate-100 mt-0.5" title={loc.address}>
+            {loc.address}
+          </span>
+        )}
+        {loc.latitude && loc.longitude && (
+          <a 
+            href={`https://www.google.com/maps?q=${loc.latitude},${loc.longitude}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 flex items-center space-x-1 text-[9px] font-black uppercase tracking-wider mt-0.5"
+          >
+            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/></svg>
+            <span>View Map</span>
+          </a>
+        )}
+      </div>
+    );
+  };
+
   const getColor = (index) => {
     const colors = ['bg-[#76B055]', 'bg-[#71203A]', 'bg-[#DE7F5A]', 'bg-[#215E4C]', 'bg-[#E56A00]', 'bg-[#3A565A]'];
     return colors[index % colors.length];
@@ -108,6 +173,17 @@ const CheckInCheckOut = () => {
           </div>
         ) : (
           <>
+            {/* Geolocation Status Warning */}
+            {geoStatus === 'denied' && (
+               <div className="bg-red-50 border border-red-100 text-red-800 px-4 py-3 rounded-xl text-xs flex items-start mb-4 shadow-sm animate-pulse">
+                  <span className="mr-2 text-sm">⚠️</span>
+                  <div>
+                    <p className="font-bold">Location Access Denied</p>
+                    <p className="mt-0.5 text-slate-600 font-medium leading-relaxed">Please allow location access in your browser or phone settings to capture your visit history correctly.</p>
+                  </div>
+               </div>
+            )}
+
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-4 mb-8">
                <button 
@@ -153,12 +229,14 @@ const CheckInCheckOut = () => {
                          <div className="flex flex-col flex-1 pl-4 md:pl-6">
                             <span className="font-bold text-slate-800 text-sm md:text-base">{formatTime(item.checkIn)}</span>
                             <span className="text-xs text-slate-500 font-medium">Check In</span>
+                            {renderLocationLink(item.location?.checkInLocation)}
                          </div>
 
                          {/* Check Out */}
                          <div className="flex flex-col flex-1">
                             <span className="font-bold text-slate-800 text-sm md:text-base">{formatTime(item.checkOut)}</span>
                             <span className="text-xs text-slate-500 font-medium">Check Out</span>
+                            {renderLocationLink(item.location?.checkOutLocation)}
                          </div>
 
                          {/* Total Hours */}
@@ -167,6 +245,9 @@ const CheckInCheckOut = () => {
                               {item.totalMinutes ? `${Math.floor(item.totalMinutes / 60)}h ${item.totalMinutes % 60}m` : '--'}
                             </span>
                             <span className="text-xs text-slate-500 font-medium">Total</span>
+                            {item.status === 'auto-closed' && (
+                              <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded mt-1 inline-block">Auto Closed</span>
+                            )}
                          </div>
 
                       </div>

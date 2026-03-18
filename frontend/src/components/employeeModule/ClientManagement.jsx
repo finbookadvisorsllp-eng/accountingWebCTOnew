@@ -8,7 +8,7 @@ const managementOptions = [
   { id: 'checkin', title: 'Check-in & Check-out', desc: 'Track client visits efficiently.', color: 'bg-slate-400' },
   { id: 'history', title: 'Client Historical Data', desc: 'Monitor transactions & records.', color: 'bg-red-700' },
   { id: 'financial', title: 'Financial Data', desc: 'Manage and track finances securely.', color: 'bg-slate-600' },
-  { id: 'dashboard', title: 'Client Financial Dashboard', desc: 'Overview of client transactions and balances.', color: 'bg-green-600' },
+
   { id: 'reports', title: 'Client Financial Reports', desc: 'Overview of client Financial reports.', color: 'bg-green-500' },
   { id: 'queries', title: 'Client Queries', desc: 'Track and resolve client inquiries efficiently.', color: 'bg-red-800' },
   { id: 'documents', title: 'Documents and Files', desc: 'Securely store and access important records.', color: 'bg-slate-700' },

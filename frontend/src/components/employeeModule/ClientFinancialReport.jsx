@@ -1,9 +1,10 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
+import CompanySelector from './CompanySelector';
 
 const reportOptions = [
-  { id: 'dashboard', title: 'Client Dashboard', color: 'bg-[#3A565A]', path: '' },
+  { id: 'dashboard', title: 'Client Dashboard', color: 'bg-[#3A565A]', path: 'reports/dashboard' },
   { id: 'mom-sales', title: 'MoM Sales and Purchase', color: 'bg-[#6B8E23]', path: 'reports/mom-sales' },
   { id: 'gst-liability', title: 'GST Calculation', color: 'bg-[#A0522D]', path: 'reports/gst' },
   { id: 'pndl-yoy', title: 'PndL YoY Comparision', color: 'bg-[#696969]', path: 'reports/pndl-yoy' },
@@ -34,6 +35,7 @@ const ClientFinancialReport = () => {
 
       {/* Main Content Area */}
       <div className="p-4 md:p-8 w-full max-w-2xl mx-auto space-y-3 pt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <CompanySelector />
         
         {/* Options List */}
         {reportOptions.map((option) => (

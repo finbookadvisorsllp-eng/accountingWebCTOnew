@@ -34,6 +34,15 @@ router.get(
   clientCtrl.getClient,
 );
 
+// Get Child Companies
+router.get(
+  "/:id/children",
+  protect,
+  authorize("admin", "employee"),
+  clientCtrl.getChildCompanies,
+);
+
+
 // Update Client (Admin Only)
 router.put("/:id", protect, authorize("admin"), clientCtrl.updateClient);
 

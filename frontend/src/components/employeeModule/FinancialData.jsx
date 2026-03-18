@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
+import CompanySelector from './CompanySelector';
 
 const financialOptions = [
   { id: 'revenue', title: 'Revenue from business', color: 'bg-[#5B8D8D]' },
@@ -33,6 +34,7 @@ const FinancialData = () => {
 
       {/* Main Content Area */}
       <div className="p-4 md:p-8 w-full max-w-3xl mx-auto space-y-4 pt-6">
+        <CompanySelector />
         
         {/* Options List */}
         {financialOptions.map((option) => (

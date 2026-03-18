@@ -8,6 +8,7 @@ const TaskApplicabilitySchema = new mongoose.Schema({
     required: true,
   },
   dueDate: { type: Date },
+  frequency: { type: String }, // e.g. Monthly, Quarterly
 });
 
 const ClientSchema = new mongoose.Schema(

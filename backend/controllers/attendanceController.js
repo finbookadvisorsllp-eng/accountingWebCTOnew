@@ -24,7 +24,7 @@ exports.officeCheckIn = async (req, res) => {
     }
 
     const today = getToday();
-    const { latitude, longitude, notes } = req.body;
+    const { latitude, longitude, address, notes } = req.body;
 
     // Prevent duplicate check-in
     const existing = await Attendance.findOne({
@@ -58,6 +58,7 @@ exports.officeCheckIn = async (req, res) => {
         checkInLocation: {
           latitude: latitude || null,
           longitude: longitude || null,
+          address: address || null,
         },
       },
     });
@@ -78,7 +79,7 @@ exports.officeCheckOut = async (req, res) => {
   try {
     const employeeId = req.user._id;
     const today = getToday();
-    const { latitude, longitude, notes } = req.body;
+    const { latitude, longitude, address, notes } = req.body;
 
     const record = await Attendance.findOne({
       employee: employeeId,
@@ -95,7 +96,13 @@ exports.officeCheckOut = async (req, res) => {
     record.checkOut = now;
     record.totalMinutes = diffMinutes(record.checkIn, now);
     record.status = "checked-out";
-    if (latitude) record.location.checkOutLocation = { latitude, longitude };
+    if (latitude || address) {
+      record.location.checkOutLocation = { 
+         latitude: latitude || null, 
+         longitude: longitude || null,
+         address: address || null
+      };
+    }
     if (notes) record.notes = (record.notes ? record.notes + " | " : "") + notes;
 
     await record.save();
@@ -181,7 +188,20 @@ exports.clientCheckIn = async (req, res) => {
     const employeeId = req.user._id;
     const { clientId } = req.params;
     const today = getToday();
-    const { latitude, longitude, notes } = req.body;
+    const { latitude, longitude, address, notes } = req.body;
+
+    // Auto-close any prior client visit left open by this employee
+    const openClientVisit = await Attendance.findOne({
+      employee: employeeId,
+      type: "client",
+      status: "checked-in"
+    });
+    if (openClientVisit) {
+      openClientVisit.checkOut = new Date(); // Close at the start of new checkin
+      openClientVisit.totalMinutes = diffMinutes(openClientVisit.checkIn, openClientVisit.checkOut);
+      openClientVisit.status = "auto-closed";
+      await openClientVisit.save();
+    }
 
     const existing = await Attendance.findOne({
       employee: employeeId,
@@ -209,6 +229,7 @@ exports.clientCheckIn = async (req, res) => {
         checkInLocation: {
           latitude: latitude || null,
           longitude: longitude || null,
+          address: address || null,
         },
       },
     });
@@ -226,7 +247,7 @@ exports.clientCheckOut = async (req, res) => {
     const employeeId = req.user._id;
     const { clientId } = req.params;
     const today = getToday();
-    const { latitude, longitude, notes } = req.body;
+    const { latitude, longitude, address, notes } = req.body;
 
     // Use findOne without status: "checked-in" strictly, but look for the most recent one today
     const record = await Attendance.findOne({
@@ -257,7 +278,13 @@ exports.clientCheckOut = async (req, res) => {
     record.checkOut = now;
     record.totalMinutes = diffMinutes(record.checkIn, now);
     record.status = "checked-out";
-    if (latitude) record.location.checkOutLocation = { latitude, longitude };
+    if (latitude || address) {
+      record.location.checkOutLocation = { 
+         latitude: latitude || null, 
+         longitude: longitude || null,
+         address: address || null
+      };
+    }
     if (notes) record.notes = (record.notes ? record.notes + " | " : "") + notes;
 
     await record.save();
@@ -272,6 +299,24 @@ exports.clientCheckOut = async (req, res) => {
 // GET /api/attendance/client/:clientId/history
 exports.clientHistory = async (req, res) => {
   try {
+    const today = getToday();
+    // Auto-close any stale client visits from PAST days left open
+    const staleVisits = await Attendance.find({
+       employee: req.user._id,
+       type: "client",
+       client: req.params.clientId,
+       date: { $lt: today },
+       status: "checked-in"
+    });
+    for (let v of staleVisits) {
+       const closeTime = new Date(v.checkIn);
+       closeTime.setHours(closeTime.getHours() + 1); // 1-hour fallback
+       v.checkOut = closeTime;
+       v.totalMinutes = 60;
+       v.status = "auto-closed";
+       await v.save();
+    }
+
     const records = await Attendance.find({
       employee: req.user._id,
       type: "client",

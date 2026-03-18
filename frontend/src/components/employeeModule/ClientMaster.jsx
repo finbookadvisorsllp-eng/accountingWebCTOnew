@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Search, Bell, Menu, ChevronRight, FileText, Calendar as CalendarIcon, CheckSquare } from 'lucide-react';
+import CompanySelector from './CompanySelector';
 
 const ClientMaster = ({ onMenuClick }) => {
   const navigate = useNavigate();
@@ -34,11 +35,7 @@ const ClientMaster = ({ onMenuClick }) => {
       {/* Main Content Area */}
       <div className="p-4 md:p-8 w-full max-w-3xl mx-auto space-y-6">
         
-        {/* Company Dropdown Mock */}
-        <div className="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center justify-between cursor-pointer hover:border-slate-300">
-           <span className="text-slate-700 font-medium">Company selection</span>
-           <ChevronRight size={20} className="text-slate-400 rotate-90" />
-        </div>
+        <CompanySelector />
 
         {/* KYC Details Card */}
         <div className="bg-white rounded-[24px] p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow flex flex-col space-y-4">

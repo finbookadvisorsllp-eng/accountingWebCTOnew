@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, IndianRupee, Users, FileText, Activity, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import CompanySelector from './CompanySelector';
 
 const monthlyData = [
   { name: 'Jan', revenue: 4000, expenses: 2400 },
@@ -38,6 +39,7 @@ const FinancialDashboard = () => {
       </header>
 
       <div className="p-4 md:p-8 w-full max-w-5xl mx-auto space-y-6 pt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <CompanySelector />
         
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

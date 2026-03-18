@@ -92,6 +92,13 @@ app.use("/api/compliances", require("./routes/compliance.routes"));
 app.use("/api/clients", require("./routes/clients"));
 app.use("/api/attendance", require("./routes/attendanceRoutes"));
 app.use("/api/feedback", require("./routes/feedbackRoutes"));
+app.use("/api/business-summary", require("./routes/businessSummaryRoutes"));
+app.use("/api/gst-liability", require("./routes/gstLiabilityRoutes"));
+app.use("/api/pnl", require("./routes/pnlRoutes"));
+app.use("/api/balance-sheet", require("./routes/balanceSheetRoutes"));
+
+// Compliance & Due Dates
+
 // ================= HEALTH CHECK =================
 app.get("/api/health", (req, res) => {
   res.status(200).json({

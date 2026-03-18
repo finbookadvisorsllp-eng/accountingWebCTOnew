@@ -101,9 +101,20 @@ exports.getClients = async (req, res) => {
 // GET /api/clients/my-clients — Employee sees only their assigned clients
 exports.getMyClients = async (req, res) => {
   try {
-    const employeeId = req.user._id; // Candidate ObjectId (set by auth middleware)
+    const employeeId = req.user._id; // Candidate ObjectId
     const { status } = req.query;
-    const q = { empAssign: employeeId };
+
+    // 1. Find all client IDs explicitly assigned to this employee
+    const assignedClientIds = await Client.find({ empAssign: employeeId }).select('_id');
+    const explicitIds = assignedClientIds.map(c => c._id);
+
+    // 2. Build OR query: explicit assign OR child of assigned parent
+    const q = {
+       $or: [
+           { empAssign: employeeId },
+           { groupCompany: { $in: explicitIds } }
+       ]
+    };
     if (status) q.status = status;
 
     const clients = await Client.find(q)
@@ -172,3 +183,16 @@ exports.assignAccountant = async (req, res) => {
     res.status(500).json({ message: "Failed to assign accountant" });
   }
 };
+
+exports.getChildCompanies = async (req, res) => {
+  try {
+    const children = await Client.find({ groupCompany: req.params.id })
+      .populate("entityType natureOfBusiness")
+      .sort({ createdAt: -1 });
+    res.json({ data: children, total: children.length });
+  } catch (err) {
+    console.error("getChildCompanies error:", err);
+    res.status(500).json({ message: "Failed to fetch child companies" });
+  }
+};
+
