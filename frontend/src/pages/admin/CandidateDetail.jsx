@@ -107,6 +107,7 @@ const CandidateDetail = () => {
   // Decide which detail component to render
   const isExitedCandidate =
     candidate.status === "EXITED" ||
+    candidate.status === "ALLOWED_EXITED" ||
     candidate.status === "APPROVED" ||
     candidate.status === "ACTIVE" ||
     candidate.detailedEducation?.length > 0 ||
@@ -158,16 +159,7 @@ const CandidateDetail = () => {
               </button>
             )}
 
-            {candidate.status === "EXITED" && (
-              <button
-                onClick={() => navigate(`/admin/candidates/${id}/admin-edit`)}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition shadow-sm"
-              >
-                Start Onboarding
-              </button>
-            )}
-
-            {(candidate.status === "APPROVED" || candidate.status === "ACTIVE") && (
+            {(["APPROVED", "ACTIVE", "EXITED", "ALLOWED_EXITED"].includes(candidate.status)) && (
               <button
                 onClick={() => navigate(`/admin/candidates/${id}/admin-edit`)}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm"

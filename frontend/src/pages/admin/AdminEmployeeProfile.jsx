@@ -195,7 +195,7 @@ const AdminOnboardPage = () => {
     }
   };
 
-  const isNewOnboard = candidate?.status === "EXITED";
+  const isNewOnboard = candidate?.status === "EXITED" || candidate?.status === "ALLOWED_EXITED";
 
   const handleSubmit = async () => {
     // Validate mandatory fields
@@ -240,8 +240,10 @@ const AdminOnboardPage = () => {
       let response;
       if (isNewOnboard) {
         response = await candidateAPI.approveCandidate(id, payload);
-        const creds = response.data.data.credentials;
-        setShowCredentials(creds);
+        const creds = response.data.data?.credentials;
+        if (creds) {
+          setShowCredentials(creds);
+        }
         toast.success("Candidate onboarded successfully!");
       } else {
         response = await candidateAPI.updateAdminFields(id, payload);
@@ -318,18 +320,31 @@ const AdminOnboardPage = () => {
               className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition bg-white"
             >
               <option value="">Select Reporting Authority</option>
-              {employees && employees.length > 0 ? (
-                employees.map((emp) => (
-                  <option
-                    key={emp._id}
-                    value={emp.adminInfo.employeeId}
-                  >
-                    {emp.adminInfo.employeeId} —{" "}
-                    {emp.personalInfo?.firstName} {emp.personalInfo?.lastName}
-                  </option>
-                ))
-              ) : (
-                <option value="Admin">Admin</option>
+              <option value="Admin">Admin</option>
+              {employees && employees.length > 0 && (
+                <>
+                  <optgroup label="Managers">
+                    {employees.filter(e => e.adminInfo?.designation === 'Manager').map(emp => (
+                      <option key={emp._id} value={emp.adminInfo.employeeId}>
+                        {emp.personalInfo?.firstName} {emp.personalInfo?.lastName} ({emp.adminInfo.employeeId})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Senior Accountants">
+                    {employees.filter(e => e.adminInfo?.designation === 'Senior Accountant').map(emp => (
+                      <option key={emp._id} value={emp.adminInfo.employeeId}>
+                        {emp.personalInfo?.firstName} {emp.personalInfo?.lastName} ({emp.adminInfo.employeeId})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Accountants">
+                    {employees.filter(e => e.adminInfo?.designation === 'Accountant').map(emp => (
+                      <option key={emp._id} value={emp.adminInfo.employeeId}>
+                        {emp.personalInfo?.firstName} {emp.personalInfo?.lastName} ({emp.adminInfo.employeeId})
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
               )}
             </select>
           </Field>

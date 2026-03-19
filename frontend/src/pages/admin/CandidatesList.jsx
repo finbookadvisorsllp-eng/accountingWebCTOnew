@@ -110,7 +110,7 @@ const CandidatesList = () => {
                 <option value="">All Status</option>
                 <option value="INTERESTED">Interested</option>
                 <option value="ALLOWED_EXITED">Allowed Exited</option>
-                <option value="EXITED">Exited</option>
+                <option value="EXITED,ALLOWED_EXITED">Exited</option>
                 <option value="APPROVED">Approved</option>
                 <option value="ACTIVE">Active</option>
               </select>

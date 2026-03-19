@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Clock, ChevronRight, LogIn, LogOut, Loader2, AlertCircle, CheckCircle2, Star, Building2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from 'recharts';
 import { Link } from 'react-router-dom';
-import { attendanceAPI, clientAPI } from '../../services/api';
+import { attendanceAPI, clientAPI, candidateAPI } from '../../services/api';
+import useAuthStore from '../../store/authStore';
+
+
 
 const taskData = [
   { name: 'Completed', value: 92, color: '#4ADE80' },
@@ -21,6 +24,7 @@ const barData = [
 ];
 
 const DashboardMetrics = () => {
+  const { user } = useAuthStore();
   const [todayRecord, setTodayRecord] = useState(null);
   const [summary, setSummary] = useState(null);
   const [nextClient, setNextClient] = useState(null);
@@ -29,7 +33,9 @@ const DashboardMetrics = () => {
   const [elapsed, setElapsed] = useState('00:00:00');
   const [elapsedMs, setElapsedMs] = useState(0);
   const [forgotCheckout, setForgotCheckout] = useState(false);
+  const [profile, setProfile] = useState(null);
   const timerRef = useRef(null);
+
 
   useEffect(() => {
     fetchDashboardData();
@@ -61,15 +67,20 @@ const DashboardMetrics = () => {
   async function fetchDashboardData() {
     try {
       setAttLoading(true);
-      const [todayRes, summaryRes, clientRes] = await Promise.all([
+      const [todayRes, summaryRes, clientRes, profileRes] = await Promise.all([
         attendanceAPI.officeToday(),
         attendanceAPI.getSummary(),
         clientAPI.getMyClients(),
+        user?._id ? candidateAPI.getCandidate(user._id) : Promise.resolve(null),
       ]);
       
       setTodayRecord(todayRes?.data?.data || null);
       setForgotCheckout(todayRes?.data?.forgotCheckout || false);
       setSummary(summaryRes?.data?.data || null);
+      if (profileRes?.data?.data) {
+        setProfile(profileRes.data.data);
+      }
+
       
       // Find earliest client visit for today
       const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
@@ -185,6 +196,17 @@ const DashboardMetrics = () => {
             </div>
           </div>
         )}
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-[#3A565A] to-[#6DA4A4] rounded-[20px] p-5 text-white shadow-md flex justify-between items-center animate-in fade-in slide-in-from-top-3 duration-500">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold">Welcome back, {profile?.personalInfo?.firstName || "Accountant"}! 👋</h1>
+            <p className="text-xs md:text-sm mt-1 text-white/80">Manage your clients and attendance here.</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 text-right">
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/60">Reporting To</p>
+            <p className="text-sm font-bold mt-0.5">{profile?.adminInfo?.reportingAuthorityName || "Admin"}</p>
+          </div>
+        </div>
 
         {/* Top Grid Area */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">

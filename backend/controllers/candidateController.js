@@ -270,7 +270,11 @@ exports.getCandidates = async (req, res) => {
     const query = {};
 
     if (status) {
-      query.status = status;
+      if (status.includes(",")) {
+        query.status = { $in: status.split(",") };
+      } else {
+        query.status = status;
+      }
     }
 
     if (search) {
@@ -324,9 +328,25 @@ exports.getCandidate = async (req, res) => {
       });
     }
 
+    // Resolve reportingAuthority name
+    let reportingAuthorityName = "Admin";
+    if (candidate.adminInfo?.reportingAuthority && candidate.adminInfo.reportingAuthority !== "Admin") {
+      const supervisor = await Candidate.findOne({ "adminInfo.employeeId": candidate.adminInfo.reportingAuthority });
+      if (supervisor) {
+        reportingAuthorityName = `${supervisor.personalInfo?.firstName || ""} ${supervisor.personalInfo?.lastName || ""}`.trim() || candidate.adminInfo.reportingAuthority;
+      } else {
+        reportingAuthorityName = candidate.adminInfo.reportingAuthority;
+      }
+    }
+
+    const candidateObj = candidate.toObject();
+    if (candidateObj.adminInfo) {
+      candidateObj.adminInfo.reportingAuthorityName = reportingAuthorityName;
+    }
+
     res.json({
       success: true,
-      data: candidate,
+      data: candidateObj,
     });
   } catch (error) {
     res.status(500).json({
@@ -508,12 +528,14 @@ exports.updateAdminFields = async (req, res) => {
       });
     }
 
-    if (!["APPROVED", "ACTIVE"].includes(candidate.status)) {
+    if (!["APPROVED", "ACTIVE", "EXITED", "ALLOWED_EXITED"].includes(candidate.status)) {
       return res.status(400).json({
         success: false,
-        message: "Only approved or active candidates can be updated by admin",
+        message: "Only approved, active, or exited candidates can be updated by admin",
       });
     }
+
+    const isOnboarding = ["EXITED", "ALLOWED_EXITED"].includes(candidate.status);
 
     // Parse JSON fields from multipart form-data
     const safeJSON = (v) => { try { return typeof v === 'string' ? JSON.parse(v) : v; } catch { return v; } };
@@ -528,9 +550,38 @@ exports.updateAdminFields = async (req, res) => {
     const contactInfo = safeJSON(req.body.contactInfo);
 
     // Update adminInfo fields
-    if (designation) candidate.adminInfo.designation = designation;
-    if (reportingAuthority) candidate.adminInfo.reportingAuthority = reportingAuthority;
-    if (dateOfJoining) candidate.adminInfo.dateOfJoining = dateOfJoining;
+    if (isOnboarding) {
+      // ── Generate employee ID and password for onboarding ──
+      if (!designation || !reportingAuthority) {
+        return res.status(400).json({
+          success: false,
+          message: "Designation and Reporting Authority are mandatory for onboarding",
+        });
+      }
+      const employeeId = await generateEmployeeId(Candidate, designation);
+      const tempPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+      candidate.adminInfo = {
+        employeeId,
+        password: hashedPassword,
+        designation,
+        reportingAuthority,
+        dateOfJoining: dateOfJoining || new Date(),
+        generatedBy: req.user._id,
+        generatedAt: new Date(),
+      };
+
+      candidate.status = "APPROVED";
+      candidate.profilePercentage = 80;
+
+      // Store credentials for response
+      var credentials = { employeeId, temporaryPassword: tempPassword };
+    } else {
+      if (designation) candidate.adminInfo.designation = designation;
+      if (reportingAuthority) candidate.adminInfo.reportingAuthority = reportingAuthority;
+      if (dateOfJoining) candidate.adminInfo.dateOfJoining = dateOfJoining;
+    }
 
     // Update other sections
     if (familyBackground) {
@@ -572,10 +623,15 @@ exports.updateAdminFields = async (req, res) => {
     candidate.lastModifiedBy = req.user._id;
     await candidate.save();
 
+    const responseData = { candidate };
+    if (isOnboarding && credentials) {
+      responseData.credentials = credentials;
+    }
+
     res.json({
       success: true,
-      message: "Candidate updated successfully",
-      data: candidate,
+      message: isOnboarding ? "Candidate onboarded successfully" : "Candidate updated successfully",
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({

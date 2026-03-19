@@ -110,11 +110,11 @@ const AdminDashboard = () => {
         },
         {
           title: "Exited",
-          value: stats.byStatus?.EXITED || 0,
+          value: (stats.byStatus?.EXITED || 0) + (stats.byStatus?.ALLOWED_EXITED || 0),
           icon: <FaUserCheck />,
           color: "text-purple-600",
           bg: "bg-purple-50",
-          link: "/admin/candidates?status=EXITED",
+          link: "/admin/candidates?status=EXITED,ALLOWED_EXITED",
         },
         {
           title: "Approved",

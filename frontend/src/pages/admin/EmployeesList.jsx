@@ -27,7 +27,7 @@ const EmployeesList = () => {
     setLoading(true);
     try {
       const response = await candidateAPI.getCandidates({
-        status: "ACTIVE",
+        status: "APPROVED,ACTIVE",
         search: filters.search,
         page: pagination.currentPage,
         limit: 10,
