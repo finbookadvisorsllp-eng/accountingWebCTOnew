@@ -31,6 +31,8 @@ const EmployeeLayout = () => {
     currentView = 'reports';
   } else if (location.pathname.includes('/communication')) {
     currentView = 'communication';
+  } else if (location.pathname.includes('/reschedule')) {
+    currentView = 'reschedule';
   }
 
   // Get user ID for contract acceptance

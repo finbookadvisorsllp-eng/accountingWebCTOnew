@@ -890,3 +890,81 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// @desc    Get team members reporting to current employee (recursive)
+// @route   GET /api/candidates/my-team
+// @access  Private (Employee)
+exports.getMyTeam = async (req, res) => {
+  try {
+    const Client = require("../models/Client");
+    const currentUser = await Candidate.findById(req.user._id);
+
+    if (!currentUser || !currentUser.adminInfo?.employeeId) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
+    }
+
+    const myEmpId = currentUser.adminInfo.employeeId;
+    const myDesignation = currentUser.adminInfo.designation || "Accountant";
+
+    // Recursively find all subordinates
+    async function findSubordinates(supervisorEmpId, depth = 1) {
+      const directReports = await Candidate.find({
+        "adminInfo.reportingAuthority": supervisorEmpId,
+        status: { $in: ["APPROVED", "ACTIVE"] },
+      }).select("personalInfo.firstName personalInfo.lastName adminInfo.employeeId adminInfo.designation adminInfo.reportingAuthority adminInfo.dateOfJoining personalInfo.email status");
+
+      let allReports = [];
+
+      for (const report of directReports) {
+        // Count clients assigned to this person
+        const clientCount = await Client.countDocuments({ empAssign: report._id });
+        
+        const reportObj = {
+          _id: report._id,
+          name: `${report.personalInfo?.firstName || ""} ${report.personalInfo?.lastName || ""}`.trim(),
+          employeeId: report.adminInfo?.employeeId,
+          designation: report.adminInfo?.designation || "Accountant",
+          reportsTo: supervisorEmpId,
+          depth,
+          clientCount,
+          status: report.status,
+          dateOfJoining: report.adminInfo?.dateOfJoining,
+        };
+
+        allReports.push(reportObj);
+
+        // Recurse for sub-reports (Manager → Senior → Accountant)
+        const subReports = await findSubordinates(report.adminInfo.employeeId, depth + 1);
+        allReports = allReports.concat(subReports);
+      }
+
+      return allReports;
+    }
+
+    const team = await findSubordinates(myEmpId);
+
+    // Summary stats
+    const summary = {
+      totalMembers: team.length,
+      byDesignation: {},
+      totalClients: team.reduce((sum, m) => sum + m.clientCount, 0),
+    };
+    team.forEach((m) => {
+      summary.byDesignation[m.designation] = (summary.byDesignation[m.designation] || 0) + 1;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        currentUser: {
+          name: `${currentUser.personalInfo?.firstName || ""} ${currentUser.personalInfo?.lastName || ""}`.trim(),
+          employeeId: myEmpId,
+          designation: myDesignation,
+        },
+        team,
+        summary,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

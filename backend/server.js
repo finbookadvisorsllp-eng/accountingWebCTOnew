@@ -96,6 +96,7 @@ app.use("/api/business-summary", require("./routes/businessSummaryRoutes"));
 app.use("/api/gst-liability", require("./routes/gstLiabilityRoutes"));
 app.use("/api/pnl", require("./routes/pnlRoutes"));
 app.use("/api/balance-sheet", require("./routes/balanceSheetRoutes"));
+app.use("/api/reschedule", require("./routes/rescheduleRoutes"));
 
 // Compliance & Due Dates
 

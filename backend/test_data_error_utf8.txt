@@ -1,0 +1,85 @@
+﻿Connected to DB
+Found client: FINBOOK ADVISORS LLP (69b945b548c2b2c47b51d6ef)
+node : Error: ClientPnLRecord 
+validation failed: createdBy: 
+Path `createdBy` is required.
+At line:1 char:1
++ node tmp_create_test_data.js 
+> test_data_error.txt 2>&1; 
+Get-Content  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: (Error: Clie  
+  ntPn...y` is required.:Str   
+ ing) [], RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+    at ValidationError.inspect 
+(A:\accountingWebCTOnew-cto-hey
+-tech-stack-mern-mongodb-expres
+s-react-js-node-for-style\accou
+ntingWebCTOnew\backend\node_mod
+ules\mongoose\lib\error\validat
+ion.js:52:26)
+    at formatValue (node:intern
+al/util/inspect:850:19)
+    at inspect (node:internal/u
+til/inspect:387:10)
+    at 
+formatWithOptionsInternal (node
+:internal/util/inspect:2366:40)
+    at formatWithOptions (node:
+internal/util/inspect:2228:10)
+    at console.value (node:inte
+rnal/console/constructor:345:14
+)
+    at console.error (node:inte
+rnal/console/constructor:412:61
+)
+    at A:\accountingWebCTOnew-c
+to-hey-tech-stack-mern-mongodb-
+express-react-js-node-for-style
+\accountingWebCTOnew\backend\tm
+p_create_test_data.js:79:11
+    at process.processTicksAndR
+ejections (node:internal/proces
+s/task_queues:105:5) {
+  errors: {
+    createdBy: ValidatorError: 
+Path `createdBy` is required.
+        at validate (A:\account
+ingWebCTOnew-cto-hey-tech-stack
+-mern-mongodb-express-react-js-
+node-for-style\accountingWebCTO
+new\backend\node_modules\mongoo
+se\lib\schemaType.js:1443:13)
+        at 
+SchemaType.doValidate (A:\accou
+ntingWebCTOnew-cto-hey-tech-sta
+ck-mern-mongodb-express-react-j
+s-node-for-style\accountingWebC
+TOnew\backend\node_modules\mong
+oose\lib\schemaType.js:1427:7)
+        at A:\accountingWebCTOn
+ew-cto-hey-tech-stack-mern-mong
+odb-express-react-js-node-for-s
+tyle\accountingWebCTOnew\backen
+d\node_modules\mongoose\lib\doc
+ument.js:3134:18
+        at process.processTicks
+AndRejections (node:internal/pr
+ocess/task_queues:85:11) {
+      properties: [Object],
+      kind: 'required',
+      path: 'createdBy',
+      value: undefined,
+      reason: undefined,
+      [Symbol(mongoose#validato
+rError)]: true
+    }
+  },
+  _message: 'ClientPnLRecord 
+validation failed'
+}

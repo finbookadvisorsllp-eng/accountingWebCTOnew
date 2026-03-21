@@ -196,3 +196,32 @@ exports.getChildCompanies = async (req, res) => {
   }
 };
 
+// GET /api/clients/team-clients — Get clients for a list of team member IDs
+exports.getTeamClients = async (req, res) => {
+  try {
+    const { memberIds } = req.query; // comma-separated ObjectIds
+    if (!memberIds) {
+      return res.json({ data: [], total: 0 });
+    }
+
+    const ids = memberIds.split(",").filter(Boolean);
+    
+    const clients = await Client.find({ empAssign: { $in: ids } })
+      .populate("entityType natureOfBusiness")
+      .select("entityName clientId contactName contactEmail contactPhone status empAssign visitDays visitTimeFrom visitTimeTo")
+      .sort({ createdAt: -1 });
+
+    // Group by employee
+    const grouped = {};
+    clients.forEach((c) => {
+      const empId = c.empAssign?.toString() || "unassigned";
+      if (!grouped[empId]) grouped[empId] = [];
+      grouped[empId].push(c);
+    });
+
+    res.json({ data: clients, grouped, total: clients.length });
+  } catch (err) {
+    console.error("getTeamClients error:", err);
+    res.status(500).json({ message: "Failed to fetch team clients" });
+  }
+};

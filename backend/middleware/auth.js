@@ -36,6 +36,17 @@ exports.protect = async (req, res, next) => {
       }
 
       user.role = "employee"; // important
+    } else if (decoded.role === "client") {
+      const Client = require("../models/Client");
+      user = await Client.findById(decoded.id);
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "Client not found",
+        });
+      }
+      user.role = "client"; // important
     } else {
       user = await User.findById(decoded.id).select("-password");
 

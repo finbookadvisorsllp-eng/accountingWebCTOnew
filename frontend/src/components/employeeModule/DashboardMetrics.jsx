@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Clock, ChevronRight, LogIn, LogOut, Loader2, AlertCircle, CheckCircle2, Star, Building2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from 'recharts';
 import { Link } from 'react-router-dom';
-import { attendanceAPI, clientAPI, candidateAPI } from '../../services/api';
+import { attendanceAPI, clientAPI, candidateAPI, rescheduleAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
+import TeamHierarchySection from './TeamHierarchySection';
 
 
 
@@ -34,6 +35,7 @@ const DashboardMetrics = () => {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [forgotCheckout, setForgotCheckout] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [pendingRescheduleCount, setPendingRescheduleCount] = useState(0);
   const timerRef = useRef(null);
 
 
@@ -93,6 +95,14 @@ const DashboardMetrics = () => {
       console.error('Failed to fetch dashboard data', err);
     } finally {
       setAttLoading(false);
+    }
+
+    // Fetch pending reschedule count for seniors
+    if (user?.designation === 'Manager' || user?.designation === 'Senior Accountant') {
+      try {
+        const rescRes = await rescheduleAPI.getPending();
+        setPendingRescheduleCount(rescRes?.data?.data?.length || 0);
+      } catch (e) {}
     }
   }
 
@@ -397,6 +407,38 @@ const DashboardMetrics = () => {
             )}
           </div>
         </div>
+
+        {/* Team Hierarchy Section — Only for Manager / Senior Accountant */}
+        {(user?.designation === 'Manager' || user?.designation === 'Senior Accountant') && (
+          <TeamHierarchySection designation={user.designation} />
+        )}
+
+        {/* Pending Reschedule Card for Seniors */}
+        {(user?.designation === 'Manager' || user?.designation === 'Senior Accountant') && pendingRescheduleCount > 0 && (
+          <Link to="/employee/reschedule" className="block">
+            <div className="bg-white rounded-[20px] p-5 shadow-sm border border-amber-200 hover:shadow-md transition-shadow flex items-center justify-between group">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800 text-base">Reschedule Requests</h3>
+                  <p className="text-xs text-amber-600 font-semibold mt-0.5">
+                    {pendingRescheduleCount} pending request{pendingRescheduleCount !== 1 ? 's' : ''} from your team
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="bg-amber-500 text-white text-sm font-black w-8 h-8 rounded-full flex items-center justify-center">
+                  {pendingRescheduleCount}
+                </span>
+                <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-[#3A565A] transition-all" />
+              </div>
+            </div>
+          </Link>
+        )}
 
         {/* Bottom Grid Area */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">

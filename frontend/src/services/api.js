@@ -79,6 +79,7 @@ export const candidateAPI = {
     }),
   changePassword: (id, data) =>
     api.put(`/candidates/${id}/change-password`, data),
+  getMyTeam: () => api.get("/candidates/my-team"),
 };
 
 // Upload endpoints
@@ -118,6 +119,8 @@ export const clientAPI = {
     api.put(`/clients/${clientId}/assign`, { accountantId }),
   getChildCompanies: (id) => api.get(`/clients/${id}/children`),
   getStats: () => api.get("/clients/stats"),
+  getTeamClients: (memberIds) =>
+    api.get("/clients/team-clients", { params: { memberIds } }),
 };
 
 // User endpoints
@@ -207,5 +210,16 @@ export const balanceSheetAPI = {
 };
 
 // complianceAPI merged above
+
+// Reschedule endpoints
+export const rescheduleAPI = {
+  create: (data) => api.post("/reschedule", data),
+  getMyRequests: () => api.get("/reschedule/my-requests"),
+  getPending: () => api.get("/reschedule/pending"),
+  seniorAction: (id, data) => api.put(`/reschedule/${id}/senior-action`, data),
+  sendToClient: (id, data) => api.put(`/reschedule/${id}/send-to-client`, data),
+  clientRespond: (id, data) => api.put(`/reschedule/${id}/client-respond`, data),
+  getByClient: (clientId) => api.get(`/reschedule/client/${clientId}`),
+};
 
 export default api;

@@ -319,6 +319,17 @@ import PndLYoYComparision from "./components/employeeModule/PndLYoYComparision";
 import BSYoYComparision from "./components/employeeModule/BSYoYComparision";
 import KeyRatios from "./components/employeeModule/KeyRatios";
 import ProfileLayout from "./components/employeeModule/ProfileLayout";
+import RescheduleManagement from "./components/employeeModule/RescheduleManagement";
+
+// Admin reschedule view
+import ClientRescheduleView from "./pages/admin/clients/ClientRescheduleView";
+
+// Client Module imports
+import ClientLayoutPortal from "./components/clientModule/ClientLayout";
+import ClientDashboard from "./components/clientModule/ClientDashboard";
+import ClientFinancials from "./components/clientModule/ClientFinancials";
+import ClientQueriesPortal from "./components/clientModule/ClientQueries";
+import ClientReschedule from "./components/clientModule/ClientReschedule";
 
 // Route protection
 import PrivateRoute from "./components/PrivateRoute"; // adjust path if needed
@@ -497,6 +508,32 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/admin/clients/:id/reschedule"
+            element={
+              <PrivateRoute allowedRoles={["admin"]}>
+                <ClientRescheduleView />
+              </PrivateRoute>
+            }
+          />
+
+          {/* ------------------ Client Module (nested at /client) ------------------ */}
+          <Route
+            path="/client/*"
+            element={
+              <PrivateRoute allowedRoles={["client"]}>
+                <ClientLayoutPortal />
+              </PrivateRoute>
+            }
+          >
+            <Route index element={<ClientDashboard />} />
+            <Route path="dashboard" element={<ClientDashboard />} />
+            <Route path="financials" element={<ClientFinancials />} />
+            <Route path="queries" element={<ClientQueriesPortal />} />
+            {/* Reschedule actions happen inside Dashboard banner directly */}
+            <Route path="reschedule" element={<ClientReschedule />} />
+            <Route path="*" element={<ClientDashboard />} />
+          </Route>
 
           {/* ------------------ Employee (legacy top-level) ------------------
               Keep legacy route if other parts of app link to /employee/dashboard
@@ -584,6 +621,9 @@ function App() {
 
             {/* Team */}
             <Route path="team" element={<TeamManagement />} />
+
+            {/* Reschedule */}
+            <Route path="reschedule" element={<RescheduleManagement />} />
 
             {/* Fallback for /employee/* */}
             <Route path="*" element={<DashboardMetrics />} />

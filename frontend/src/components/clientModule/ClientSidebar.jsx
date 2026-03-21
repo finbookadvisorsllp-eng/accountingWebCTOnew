@@ -2,38 +2,27 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Users, 
-  UserPlus, 
-  Layers, 
-  BarChart2, 
-  MessageSquare, 
+  RefreshCcw, 
   Clock, 
   Settings,
-  RefreshCcw 
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/employee' },
-  { id: 'clients', label: 'Clients Management', icon: Users, path: '/employee/clients' },
-  { id: 'team', label: 'Team Management', icon: UserPlus, path: '/employee/team' },
-  { id: 'resources', label: 'Resources', icon: Layers, path: '/employee/resources' },
-  { id: 'reports', label: 'Reports & Analytics', icon: BarChart2, path: '/employee/reports' },
-  { id: 'communication', label: 'Communication', icon: MessageSquare, path: '/employee/communication' },
-  { id: 'attendance', label: 'Attendance & Time Tracking', icon: Clock, path: '/employee/attendance' },
-  { id: 'reschedule', label: 'Reschedule Requests', icon: RefreshCcw, path: '/employee/reschedule' },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/client/dashboard' },
+  { id: 'reschedule', label: 'Reschedule Requests', icon: RefreshCcw, path: '/client/reschedule' },
+  { id: 'financials', label: 'Financials', icon: FileText, path: '/client/financials' },
+  { id: 'queries', label: 'Queries', icon: MessageSquare, path: '/client/queries' },
 ];
 
-const Sidebar = ({ className = '', currentView = 'dashboard', onNavClick }) => {
+const ClientSidebar = ({ className = '', currentView = 'dashboard', onNavClick }) => {
   return (
     <div className={`bg-white h-full py-8 px-6 flex flex-col ${className}`}>
-      {/* Profile Section */}
+      {/* Brand logo frame or profile can fit here */}
       <div className="flex flex-col items-center mb-8">
-        <div className="w-20 h-20 rounded-full bg-slate-200 overflow-hidden mb-4 border-2 border-white shadow-sm">
-          <img 
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" 
-            alt="User profile" 
-            className="w-full h-full object-cover"
-          />
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3A565A] to-[#6DA4A4] flex items-center justify-center text-white text-xl font-bold shadow-md">
+          C
         </div>
       </div>
 
@@ -63,7 +52,7 @@ const Sidebar = ({ className = '', currentView = 'dashboard', onNavClick }) => {
       {/* Settings at the bottom */}
       <div className="mt-auto">
         <Link 
-          to="/employee/profile"
+          to="/client/profile"
           onClick={onNavClick}
           className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors cursor-pointer text-sm font-medium ${
             currentView === 'profile' 
@@ -79,4 +68,4 @@ const Sidebar = ({ className = '', currentView = 'dashboard', onNavClick }) => {
   );
 };
 
-export default Sidebar;
+export default ClientSidebar;

@@ -26,11 +26,19 @@ router.get(
 // Get All Clients (Admin)
 router.get("/", protect, authorize("admin"), clientCtrl.getClients);
 
-// Get Single Client
+// Get Clients for team members (Employee - Manager/Senior)
+router.get(
+  "/team-clients",
+  protect,
+  authorize("employee"),
+  clientCtrl.getTeamClients,
+);
+
+// Get Single Client (client can view own profile too)
 router.get(
   "/:id",
   protect,
-  authorize("admin", "employee"),
+  authorize("admin", "employee", "client"),
   clientCtrl.getClient,
 );
 
@@ -38,7 +46,7 @@ router.get(
 router.get(
   "/:id/children",
   protect,
-  authorize("admin", "employee"),
+  authorize("admin", "employee", "client"),
   clientCtrl.getChildCompanies,
 );
 

@@ -304,6 +304,7 @@ exports.login = async (req, res) => {
 
     // ---------- CLIENT LOGIN ----------
     if (role === "client") {
+      const Client = require("../models/Client");
 
       if (!clientId || !password) {
         return res.status(400).json({
@@ -312,8 +313,42 @@ exports.login = async (req, res) => {
         });
       }
 
-      user = await User.findOne({ clientId }).select("+password");
+      const client = await Client.findOne({ clientId });
 
+      if (!client) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials",
+        });
+      }
+
+      // Verify password manually (Client uses passwordHash)
+      const isMatch = await bcrypt.compare(password, client.passwordHash);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials",
+        });
+      }
+
+      if (client.status !== "active") {
+        return res.status(401).json({
+          success: false,
+          message: "Account is inactive. Contact admin.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          _id: client._id,
+          name: client.contactName || client.entityName,
+          email: client.contactEmail,
+          clientId: client.clientId,
+          role: "client",
+          token: generateToken(client._id, "client"),
+        },
+      });
     }
 
     if (!user) {
@@ -428,6 +463,7 @@ exports.employeeLogin = async (req, res) => {
         employeeId: candidate.adminInfo.employeeId,
         name: `${candidate.personalInfo.firstName} ${candidate.personalInfo.lastName}`,
         email: candidate.contactInfo?.email || candidate.personalInfo?.email,
+        designation: candidate.adminInfo.designation || "Accountant",
         status: candidate.status,
         profilePercentage: candidate.profilePercentage,
         contractAccepted: candidate.employeeContractAcceptance?.allTermsAccepted || false,
